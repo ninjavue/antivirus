@@ -1,0 +1,17 @@
+<resources>
+    <string name="app_name">Antivirus</string>
+    <string name="optimize">OPTIMIZE</string>
+    <string name="cleaner">Tozalash</string>
+    <string name="antivirus">Antivirus</string>
+    <string name="battery">Quvvat</string>
+    <string name="data">Malumot</string>
+    <string name="security">Xavfsizlik</string>
+    <string name="files">Fayllar</string>
+    <string name="quick_scan">QUICK SCAN</string>
+    <string name="full_scan">Full Scan</string>
+    <string name="update">Yangilanish</string>
+    <string name="settings">Sozlamalar</string>
+    <string name="optimize1">Fayl tanlash</string>
+    <string name="back">Back</string>
+    <string name="accessibility_service_description">Tashqi manbadan ilova o`rnatishni bloklash uchun xizmat</string>
+</resources>

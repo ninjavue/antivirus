@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- More visible top/side border/shadow -->
+    <item>
+        <shape android:shape="rectangle">
+            <corners android:topLeftRadius="32dp" android:topRightRadius="32dp" android:bottomLeftRadius="0dp" android:bottomRightRadius="0dp"/>
+            <padding android:left="2dp" android:top="2dp" android:right="2dp" android:bottom="0dp"/>
+            <gradient
+                android:type="linear"
+                android:angle="270"
+                android:startColor="#66FFFFFF"
+                android:centerColor="#22FFFFFF"
+                android:endColor="#181B23"/>
+        </shape>
+    </item>
+    <!-- Main card background (only top corners rounded) -->
+    <item>
+        <shape android:shape="rectangle">
+            <corners android:topLeftRadius="32dp" android:topRightRadius="32dp" android:bottomLeftRadius="0dp" android:bottomRightRadius="0dp"/>
+            <solid android:color="#181B23"/>
+        </shape>
+    </item>
+</layer-list> 

@@ -1,0 +1,257 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+     android:clipChildren="false"
+    android:clipToPadding="false"
+    android:background="?android:attr/windowBackground">
+
+    <LinearLayout
+        android:id="@+id/back"
+        android:layout_width="match_parent"
+        android:layout_height="56dp"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:background="@android:color/transparent"
+        android:paddingStart="16dp"
+        android:paddingEnd="16dp">
+
+        <ImageView
+            android:id="@+id/btnBack"
+            android:layout_width="25dp"
+            android:layout_height="25dp"
+            android:src="@drawable/ic_arrow_right"
+            android:rotation="180"
+            android:contentDescription="@string/back"
+            android:background="?android:attr/selectableItemBackgroundBorderless" />
+
+        <TextView
+            android:id="@+id/tvTitle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Tozalash"
+            android:textColor="@android:color/white"
+            android:textSize="18sp"
+            android:textStyle="bold"/>
+    </LinearLayout>
+    <FrameLayout
+        android:id="@+id/cleanerCircleContainer"
+        android:layout_width="250dp"
+        android:layout_height="250dp"
+        android:layout_marginTop="32dp"
+        android:layout_centerHorizontal="true"
+        android:clipChildren="false"
+        android:clipToPadding="false">
+
+        <uz.csec.antivirus.CleanerCircularProgressView
+            android:id="@+id/cleanerMainProgress"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="vertical"
+            android:gravity="center">
+            <TextView
+                android:id="@+id/tvCleanableSize"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="12.7"
+                android:textColor="#FFFFFF"
+                android:textSize="38sp"
+                android:textStyle="bold"/>
+            <TextView
+                android:id="@+id/tvCleanableUnit"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="GB"
+                android:textColor="#B0BEC5"
+                android:textSize="18sp"
+                android:layout_marginTop="-8dp"/>
+            <TextView
+                android:id="@+id/tvCleanableDesc"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Tozalash"
+                android:textColor="#B0BEC5"
+                android:textSize="16sp"
+                android:layout_marginTop="10dp"
+                android:clickable="true"
+                android:focusable="true"
+                android:background="@drawable/btn_clean_bg"
+                android:paddingHorizontal="12dp"
+                android:paddingVertical="5dp"
+                android:minWidth="80dp"
+                android:gravity="center"/>
+        </LinearLayout>
+    </FrameLayout>
+
+    <!-- Bottom card -->
+    <LinearLayout
+        android:id="@+id/cleanerBottomCard"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:background="@drawable/bottom_card_bg"
+        android:layout_marginLeft="12dp"
+        android:layout_marginRight="12dp"
+        android:layout_marginBottom="0dp"
+        android:elevation="8dp"
+        android:padding="16dp"
+        android:layout_alignParentBottom="true">
+        <View
+            android:layout_width="100dp"
+            android:layout_height="3dp"
+            android:layout_gravity="center_horizontal"
+            android:background="#22FFFFFF"
+            android:layout_marginBottom="16dp"/>
+
+        <!-- Top indicator row -->
+        <LinearLayout
+            android:id="@+id/indicatorRow"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center"
+            android:layout_marginBottom="20dp">
+
+            <!-- Memory Indicator -->
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="vertical"
+                android:gravity="center">
+                <FrameLayout
+                    android:layout_width="80dp"
+                    android:layout_height="80dp">
+                    <uz.csec.antivirus.CleanerCircularProgressView
+                        android:id="@+id/cleanerProgressMemory"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent" />
+                    <TextView
+                        android:id="@+id/tvMemoryPercent"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:gravity="center"
+                        android:text="87%"
+                        android:textColor="#FFFFFF"
+                        android:textSize="14sp"/>
+                </FrameLayout>
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Xotira"
+                    android:textColor="#FFFFFF"
+                    android:textSize="14sp"
+                    android:layout_gravity="center"/>
+            </LinearLayout>
+
+            <!-- Ram Indicator -->
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="vertical"
+                android:gravity="center">
+                <FrameLayout
+                    android:layout_width="80dp"
+                    android:layout_height="80dp">
+                    <uz.csec.antivirus.CleanerCircularProgressView
+                        android:id="@+id/cleanerProgressRam"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent" />
+                    <TextView
+                        android:id="@+id/tvRamPercent"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:gravity="center"
+                        android:text="50%"
+                        android:textColor="#FFFFFF"
+                        android:textSize="14sp"/>
+                </FrameLayout>
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Ram"
+                    android:textColor="#FFFFFF"
+                    android:textSize="14sp"
+                    android:layout_gravity="center"/>
+            </LinearLayout>
+
+            <!-- Battery Indicator -->
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="vertical"
+                android:gravity="center">
+                <FrameLayout
+                    android:layout_width="80dp"
+                    android:layout_height="80dp">
+                    <uz.csec.antivirus.CleanerCircularProgressView
+                        android:id="@+id/cleanerProgressBattery"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent" />
+                    <TextView
+                        android:id="@+id/tvBatteryPercent"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:gravity="center"
+                        android:text="37%"
+                        android:textColor="#FFFFFF"
+                        android:textSize="14sp"/>
+                </FrameLayout>
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Quvvat"
+                    android:textColor="#FFFFFF"
+                    android:textSize="14sp"
+                    android:layout_gravity="center"/>
+            </LinearLayout>
+
+            <!-- Apps Indicator -->
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="vertical"
+                android:gravity="center">
+                <FrameLayout
+                    android:layout_width="80dp"
+                    android:layout_height="80dp">
+                    <uz.csec.antivirus.CleanerCircularProgressView
+                        android:id="@+id/cleanerProgressApps"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent" />
+                    <TextView
+                        android:id="@+id/tvAppsPercent"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:gravity="center"
+                        android:text="70%"
+                        android:textColor="#FFFFFF"
+                        android:textSize="14sp"/>
+                </FrameLayout>
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Ilovalar"
+                    android:textColor="#FFFFFF"
+                    android:textSize="14sp"
+                    android:layout_gravity="center"/>
+            </LinearLayout>
+        </LinearLayout>
+
+        
+        <include layout="@layout/item_cleaner_list" android:id="@+id/item1" tools:replace="android:id"/>
+        <include layout="@layout/item_cleaner_list" android:id="@+id/item2" tools:replace="android:id"/>
+        <include layout="@layout/item_cleaner_list" android:id="@+id/item3" tools:replace="android:id"/>
+        <include layout="@layout/item_cleaner_list" android:id="@+id/item4" tools:replace="android:id"/>
+    </LinearLayout>
+
+</RelativeLayout>

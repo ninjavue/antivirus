@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal"
+    android:paddingHorizontal="10dp"
+    android:background="@drawable/card_background"
+    android:gravity="center_vertical">
+
+    <ImageView
+        android:id="@+id/ivFileIcon"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:src="@drawable/ic_files"
+        android:tint="@color/purple_500"
+        android:background="@drawable/circle_icon_bg"
+        android:padding="12dp" />
+
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:orientation="vertical"
+        android:layout_marginStart="16dp">
+
+        <TextView
+            android:id="@+id/tvFileName"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="file_name.txt"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            android:textColor="@android:color/white"
+            android:maxLines="1"
+            android:ellipsize="end" />
+
+        <TextView
+            android:id="@+id/tvFilePath"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="/path/to/file"
+            android:textSize="12sp"
+            android:textColor="@android:color/darker_gray"
+            android:maxLines="1"
+            android:ellipsize="end"
+            android:layout_marginTop="2dp" />
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginTop="4dp">
+
+            <TextView
+                android:id="@+id/tvFileSize"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="1.5 MB"
+                android:textSize="12sp"
+                android:textColor="@color/purple_500"
+                android:background="@drawable/dot_blue"
+                android:paddingHorizontal="8dp"
+                android:paddingVertical="2dp" />
+
+            <TextView
+                android:id="@+id/tvFileType"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text=".txt"
+                android:textSize="12sp"
+                android:textColor="@android:color/darker_gray"
+                android:layout_marginStart="8dp" />
+
+            <TextView
+                android:id="@+id/tvHidden"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Yashirin"
+                android:textSize="10sp"
+                android:textColor="@android:color/white"
+                android:background="@drawable/dot_purple"
+                android:paddingHorizontal="6dp"
+                android:paddingVertical="2dp"
+                android:layout_marginStart="8dp"
+                android:visibility="gone" />
+
+            <TextView
+                android:id="@+id/tvSuspicious"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Shubhali"
+                android:textSize="10sp"
+                android:textColor="@android:color/white"
+                android:background="@drawable/dot_cyan"
+                android:paddingHorizontal="6dp"
+                android:paddingVertical="2dp"
+                android:layout_marginStart="8dp"
+                android:visibility="gone" />
+        </LinearLayout>
+    </LinearLayout>
+
+    <ImageButton
+        android:id="@+id/btnScan"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:src="@drawable/ic_security"
+        android:background="?attr/selectableItemBackgroundBorderless"
+        android:tint="@color/purple_500"
+        android:contentDescription="Scan file" />
+
+</LinearLayout> 

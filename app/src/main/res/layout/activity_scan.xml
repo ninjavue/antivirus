@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:orientation="vertical"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:gravity="center_horizontal">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:orientation="vertical"
+        android:background="@drawable/bg_scan_gradient"
+        android:gravity="center_horizontal">
+        <LinearLayout
+            android:id="@+id/back"
+            android:layout_width="match_parent"
+            android:layout_height="56dp"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:background="@android:color/transparent"
+            android:paddingStart="16dp"
+            android:paddingEnd="16dp">
+
+            <ImageView
+                android:id="@+id/btnBack"
+                android:layout_width="25dp"
+                android:layout_height="25dp"
+                android:src="@drawable/ic_arrow_right"
+                android:rotation="180"
+                android:contentDescription="@string/back"
+                android:background="?android:attr/selectableItemBackgroundBorderless" />
+
+            <TextView
+                android:id="@+id/tvTitle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Antivirus"
+                android:textColor="@android:color/white"
+                android:textSize="18sp"
+                android:textStyle="bold"/>
+        </LinearLayout>
+        <uz.csec.antivirus.ScanProgressView
+            android:id="@+id/scanProgressView"
+            android:layout_width="220dp"
+            android:layout_height="220dp"
+            android:layout_marginLeft="10dp"
+            android:layout_marginTop="32dp" />
+
+        <com.airbnb.lottie.LottieAnimationView
+            android:id="@+id/lottieScan"
+            android:layout_width="100dp"
+            android:layout_height="100dp"
+            android:layout_gravity="center"
+            android:layout_marginTop="-170dp"
+            android:layout_marginBottom="80dp"
+            app:lottie_autoPlay="false"
+            app:lottie_loop="false"/>
+
+        <TextView
+            android:id="@+id/tvScanStatus"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="ingiz xavfsiz holatda"
+            android:textColor="?android:attr/textColorPrimary"
+            android:textSize="20sp"
+            android:textStyle="bold"
+            android:layout_marginTop="16dp"/>
+
+        <Button
+            android:id="@+id/btnQuickScan"
+            android:layout_height="48dp"
+            android:layout_width="wrap_content"
+            android:text="Tekshirish"
+            android:background="@drawable/btn_optimize_bg"
+            android:backgroundTint="@null"
+            android:textColor="@android:color/white"
+            android:textStyle="bold"
+            android:textSize="18sp"
+            android:paddingEnd="10dp"
+            android:paddingStart="10dp"
+            android:layout_marginTop="16dp"/>
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="8dp"
+        android:layout_gravity="bottom">
+
+        <include
+            android:id="@+id/cardFullScan"
+            layout="@layout/item_scan_menu_full_scan"/>
+        <include
+            android:id="@+id/cardUpdate"
+            layout="@layout/item_scan_menu_update"/>
+        <include
+            android:id="@+id/cardSettings"
+            layout="@layout/item_scan_menu_settings"/>
+    </LinearLayout>
+
+    <View
+        android:id="@+id/virusOverlay"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="#CCFF0000"
+        android:visibility="gone"/>
+</LinearLayout> 

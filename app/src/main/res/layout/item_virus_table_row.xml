@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical">
+
+    <!-- Top border -->
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="#DDDDDD" />
+
+    <!-- Row content -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:padding="8dp"
+        android:paddingStart="12dp"
+        android:paddingEnd="12dp"
+        android:gravity="center_vertical">
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical">
+            <TextView
+                android:id="@+id/tvVirusFileName"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Fayl nomi"
+                android:textStyle="bold"
+                android:textSize="15sp"/>
+            <TextView
+                android:id="@+id/tvVirusFilePath"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="/storage/emulated/0/example.apk"
+                android:textSize="12sp"
+                android:textColor="#888888"/>
+            <TextView
+                android:id="@+id/tvVirusDetectedAt"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="2024-07-14 12:00"
+                android:textSize="12sp"
+                android:layout_marginEnd="8dp"
+                android:textColor="#888888"/>
+        </LinearLayout>
+
+        <ImageButton
+            android:id="@+id/btnDeleteVirus"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:src="@android:drawable/ic_menu_delete"
+            android:background="@android:color/transparent"
+            android:contentDescription="O'chirish"
+            android:tint="#F44336"/>
+    </LinearLayout>
+</LinearLayout> 
