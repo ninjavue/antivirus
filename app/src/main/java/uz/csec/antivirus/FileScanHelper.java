@@ -15,6 +15,8 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
@@ -36,6 +38,9 @@ import android.provider.MediaStore;
 import android.content.ContentResolver;
 
 public class FileScanHelper {
+	// Notification deduplication: avoid spamming same message repeatedly
+	private static final long NOTIFICATION_DEDUP_WINDOW_MS = 60_000L; // 1 minute
+	private static final Map<String, Long> LAST_NOTIFICATION_TIME_BY_KEY = new ConcurrentHashMap<>();
     public static void handleNewFile(Context context, String filePath) {
         File file = new File(filePath);
         String fileName = file.getName().toLowerCase();
@@ -141,6 +146,16 @@ public class FileScanHelper {
     }
 
     public static void sendNotification(Context context, String title, String text) {
+		// Create a stable key per message
+		String key = title + "|" + text;
+		long now = System.currentTimeMillis();
+		Long lastTs = LAST_NOTIFICATION_TIME_BY_KEY.get(key);
+		if (lastTs != null && (now - lastTs) < NOTIFICATION_DEDUP_WINDOW_MS) {
+			Log.d("FileScanHelper", "Skipping duplicate notification within window: " + key);
+			return;
+		}
+		LAST_NOTIFICATION_TIME_BY_KEY.put(key, now);
+
         NotificationManager manager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
         String channelId = "virus_channel";
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
@@ -151,8 +166,12 @@ public class FileScanHelper {
                 .setContentTitle(title)
                 .setContentText(text)
                 .setSmallIcon(R.drawable.ic_antivirus)
-                .setPriority(NotificationCompat.PRIORITY_HIGH);
-        manager.notify((int) System.currentTimeMillis(), builder.build());
+                .setPriority(NotificationCompat.PRIORITY_HIGH)
+                .setOnlyAlertOnce(true);
+
+		// Use stable ID so same message updates instead of stacking
+		int notificationId = key.hashCode();
+        manager.notify(notificationId, builder.build());
     }
 
     public static String getMD5(File file) {
@@ -312,6 +331,11 @@ public class FileScanHelper {
     
     public static boolean isNonPlayStoreApp(Context context, String packageName) {
         try {
+            // Never flag our own app
+            if (packageName == null) return false;
+            if (context != null && packageName.equals(context.getPackageName())) {
+                return false;
+            }
             PackageManager pm = context.getPackageManager();
             ApplicationInfo appInfo = pm.getApplicationInfo(packageName, 0);
             
@@ -363,8 +387,30 @@ public class FileScanHelper {
     
     public static void checkAllInstalledApps(Context context) {
         try {
+            // Rate-limit full scan: only once per 6 hours
+            String key = "last_full_app_scan_ts";
+            android.content.SharedPreferences prefs = context.getSharedPreferences("antivirus_prefs", Context.MODE_PRIVATE);
+            long last = prefs.getLong(key, 0L);
+            long now = System.currentTimeMillis();
+            if (now - last < 6 * 60 * 60 * 1000L) {
+                Log.d("FileScanHelper", "Skipping full installed-apps scan (recently scanned)");
+                return;
+            }
+
             PackageManager pm = context.getPackageManager();
-            java.util.List<PackageInfo> packages = pm.getInstalledPackages(0);
+            java.util.List<PackageInfo> packages = null;
+            try {
+                packages = pm.getInstalledPackages(0);
+            } catch (Throwable t) {
+                Log.e("FileScanHelper", "getInstalledPackages failed, retrying once", t);
+                try { Thread.sleep(500); } catch (InterruptedException ignored) {}
+                try {
+                    packages = pm.getInstalledPackages(0);
+                } catch (Throwable t2) {
+                    Log.e("FileScanHelper", "getInstalledPackages failed again, aborting", t2);
+                    return;
+                }
+            }
             
             for (PackageInfo packageInfo : packages) {
                 String packageName = packageInfo.packageName;
@@ -372,17 +418,18 @@ public class FileScanHelper {
                 if (isSystemApp(packageInfo)) {
                     continue;
                 }
+                // Skip our own package
+                if (packageName != null && packageName.equals(context.getPackageName())) {
+                    continue;
+                }
                 
                 if (isNonPlayStoreApp(context, packageName)) {
                     Log.d("FileScanHelper", "Xavfli ilova topildi: " + packageName);
                     sendNotification(context, "Xavfli ilova", "Play Store dan o'rnatilmagan ilova: " + packageName);
-                    
-                    Intent intent = new Intent(Intent.ACTION_DELETE);
-                    intent.setData(Uri.parse("package:" + packageName));
-                    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                    context.startActivity(intent);
                 }
             }
+
+            prefs.edit().putLong(key, now).apply();
         } catch (Exception e) {
             Log.e("FileScanHelper", "Ilovalarni tekshirishda xatolik", e);
         }

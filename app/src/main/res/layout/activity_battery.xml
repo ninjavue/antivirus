@@ -31,7 +31,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Quvvat"
-            android:textColor="@android:color/white"
+            android:textColor="@android:color/black"
             android:textSize="18sp"
             android:textStyle="bold"/>
     </LinearLayout>
@@ -56,7 +56,7 @@
             android:layout_height="match_parent"
             android:gravity="center"
             android:text="50%"
-            android:textColor="#FFFFFF"
+            android:textColor="@color/black"
             android:textSize="38sp"
             android:textStyle="bold" />
     </FrameLayout>

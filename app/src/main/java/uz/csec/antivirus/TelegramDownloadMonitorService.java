@@ -30,6 +30,7 @@ public class TelegramDownloadMonitorService extends Service {
     private final List<FileObserver> observers = new ArrayList<>();
     private final List<ContentObserver> contentObservers = new ArrayList<>();
     private ScheduledExecutorService scheduler;
+    private volatile long lastMediaStoreScanMs = 0L;
 
     private static final String[] TELEGRAM_DIRS = new String[] {
         "/Android/data/org.telegram.messenger/files/Telegram/Telegram Files",
@@ -90,8 +91,16 @@ public class TelegramDownloadMonitorService extends Service {
             }
         }
         
-        // Test storage access
-        testStorageAccess();
+        // Test storage access (run off main thread)
+        if (scheduler != null) {
+            scheduler.execute(() -> {
+                try {
+                    testStorageAccess();
+                } catch (Exception e) {
+                    Log.e("TGMonitorService", "Storage access test error: " + e.getMessage(), e);
+                }
+            });
+        }
         
         // Also check for Telegram folder directly in root
         String rootStorage = Environment.getExternalStorageDirectory().getAbsolutePath();
@@ -133,6 +142,16 @@ public class TelegramDownloadMonitorService extends Service {
         
         // Test notification to verify service is working
         FileScanHelper.sendNotification(getApplicationContext(), "Telegram Monitor", "Servis ishga tushdi");
+
+        // Initial on-start scan of Telegram folders (both app-data and public Downloads/Telegram)
+        // Run asynchronously to avoid blocking main thread
+        scheduler.execute(() -> {
+            try {
+                new FileObservation().observeTelegramFiles(getApplicationContext());
+            } catch (Exception e) {
+                Log.e("TGMonitorService", "Initial Telegram scan error: " + e.getMessage(), e);
+            }
+        });
     }
     
     private void setupMonitoring(String storageRoot) {
@@ -275,7 +294,15 @@ public class TelegramDownloadMonitorService extends Service {
                 public void onChange(boolean selfChange, Uri uri) {
                     super.onChange(selfChange, uri);
                     Log.d("TGMonitorService", "Downloads MediaStore changed: " + uri);
-                    checkForNewTelegramFiles();
+                    if (scheduler != null) {
+                        scheduler.execute(() -> {
+                            try {
+                                checkForNewTelegramFiles();
+                            } catch (Exception e) {
+                                Log.e("TGMonitorService", "Downloads observer scan error: " + e.getMessage(), e);
+                            }
+                        });
+                    }
                 }
             };
             contentResolver.registerContentObserver(downloadsUri, true, downloadsObserver);
@@ -288,7 +315,15 @@ public class TelegramDownloadMonitorService extends Service {
                 public void onChange(boolean selfChange, Uri uri) {
                     super.onChange(selfChange, uri);
                     Log.d("TGMonitorService", "Files MediaStore changed: " + uri);
-                    checkForNewTelegramFiles();
+                    if (scheduler != null) {
+                        scheduler.execute(() -> {
+                            try {
+                                checkForNewTelegramFiles();
+                            } catch (Exception e) {
+                                Log.e("TGMonitorService", "Files observer scan error: " + e.getMessage(), e);
+                            }
+                        });
+                    }
                 }
             };
             contentResolver.registerContentObserver(filesUri, true, filesObserver);
@@ -303,6 +338,13 @@ public class TelegramDownloadMonitorService extends Service {
     
     private void checkForNewTelegramFiles() {
         try {
+            // Throttle scans to avoid excessive load
+            long now = System.currentTimeMillis();
+            if (now - lastMediaStoreScanMs < 1500) {
+                Log.d("TGMonitorService", "Skipping MediaStore scan (throttled)");
+                return;
+            }
+            lastMediaStoreScanMs = now;
             Log.d("TGMonitorService", "Checking for new Telegram files via MediaStore");
             
             ContentResolver contentResolver = getContentResolver();

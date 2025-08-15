@@ -97,30 +97,11 @@ public class CleanerActivity extends AppCompatActivity {
             return;
         }
 
-        CleanerCircularProgressView progressMemory = findViewById(R.id.cleanerProgressMemory);
-        CleanerCircularProgressView progressRam = findViewById(R.id.cleanerProgressRam);
-        CleanerCircularProgressView progressBattery = findViewById(R.id.cleanerProgressBattery);
-        CleanerCircularProgressView progressApps = findViewById(R.id.cleanerProgressApps);
 
-        int memoryPercent = getStoragePercent();
-        int ramPercent = getRamPercent();
-        int batteryPercent = getBatteryPercent();
-        int appsPercent = getAppsStoragePercent();
 
-        progressMemory.animateBgProgress(1f);
-        progressRam.animateBgProgress(1f);
-        progressBattery.animateBgProgress(1f);
-        progressApps.animateBgProgress(1f);
 
-        progressMemory.animateProgress(memoryPercent / 100f);
-        progressRam.animateProgress(ramPercent / 100f);
-        progressBattery.animateProgress(batteryPercent / 100f);
-        progressApps.animateProgress(appsPercent / 100f);
 
-        animatePercentText((TextView) findViewById(R.id.tvMemoryPercent), 0, memoryPercent, "%d%%", 1000);
-        animatePercentText((TextView) findViewById(R.id.tvRamPercent), 0, ramPercent, "%d%%", 1000);
-        animatePercentText((TextView) findViewById(R.id.tvBatteryPercent), 0, batteryPercent, "%d%%", 1000);
-        animatePercentText((TextView) findViewById(R.id.tvAppsPercent), 0, appsPercent, "%d%%", 1000);
+
 
         long bigFiles = getBigFilesSize(Environment.getExternalStorageDirectory(), 100 * 1024 * 1024);
         long audioVideo = getMediaFilesSize();
@@ -131,7 +112,7 @@ public class CleanerActivity extends AppCompatActivity {
         itemSizes = new long[]{bigFiles, audioVideo, apks, junk};
         itemLabels = new String[]{"Katta hajmli fayllar", "Audio & video", "Ilovalarni o'chirish", "Kesh xotira"};
         itemLayoutIds = new int[]{R.id.item1, R.id.item2, R.id.item3, R.id.item4};
-        itemSelected = new boolean[]{true, true, true, true};
+        itemSelected = new boolean[]{false, false, false, false};
 
         StatFs stat = new StatFs(Environment.getDataDirectory().getPath());
         long free = (long) stat.getAvailableBlocksLong() * stat.getBlockSizeLong();

@@ -6,13 +6,14 @@
     android:layout_marginBottom="8dp"
     card_view:cardCornerRadius="12dp"
     card_view:cardElevation="2dp"
-    android:background="@android:color/transparent">
+    android:background="@color/white">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:orientation="horizontal"
         android:gravity="center_vertical"
+        android:background="@color/white"
         android:paddingStart="16dp"
         android:paddingEnd="16dp">
 
@@ -23,7 +24,8 @@
             android:src="@drawable/fund_virus"
             android:background="@drawable/circle_icon_bg"
             android:scaleType="centerInside"
-            android:padding="10dp" />
+            android:padding="10dp"
+            card_view:tint="@color/white" />
 
         <TextView
             android:id="@+id/tvTitle"
@@ -31,13 +33,14 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:text="Qurulmadagi zararli dasturlar"
-            android:textColor="@android:color/white"
+            android:textColor="@color/antivirus_text"
             android:textSize="18sp"
             android:paddingStart="16dp" />
 
         <ImageView
             android:layout_width="24dp"
             android:layout_height="24dp"
-            android:src="@drawable/ic_arrow_right" />
+            android:src="@drawable/ic_arrow_right"
+            card_view:tint="@color/arrow_color" />
     </LinearLayout>
 </androidx.cardview.widget.CardView> 

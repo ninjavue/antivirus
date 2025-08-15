@@ -15,8 +15,14 @@ public class AppInstallReceiver extends BroadcastReceiver {
             try {
                 ApplicationInfo info = context.getPackageManager().getApplicationInfo(packageName, 0);
                 String apkPath = info.sourceDir;
-        
-                FileScanHelper.scanAndHandleApp(context, packageName, apkPath);
+                // Scan the installed app in background to avoid blocking the broadcast
+                new Thread(() -> {
+                    try {
+                        FileScanHelper.scanAndHandleApp(context.getApplicationContext(), packageName, apkPath);
+                    } catch (Exception e) {
+                        Log.e("AppInstallReceiver", "Scan error: ", e);
+                    }
+                }).start();
             } catch (Exception e) {
                 Log.e("AppInstallReceiver", "Xatolik: ", e);
             }

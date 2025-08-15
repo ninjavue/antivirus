@@ -63,7 +63,6 @@ public class FileMonitorService extends Service {
                         }
 
                         String filePath = absPath + "/" + path;
-                        // Fayl o'lchami barqarorlashgach skanerlash uchun biroz kechiktirib ishga tushiramiz
                         ScheduledExecutorService exec = scheduler != null ? scheduler : Executors.newSingleThreadScheduledExecutor();
                         exec.schedule(() -> {
                             try {

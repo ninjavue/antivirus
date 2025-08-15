@@ -8,7 +8,14 @@
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
     <color name="my_status_bar_color">#0A0B13</color>
-    <color name="status_bar_scan_gradient">#060221</color>
+    <color name="status_bar_scan_gradient">#1457b2</color>
     <color name="error">#D32F2F</color>
     <color name="virus_status_bar">#232A36</color>
+    <color name="win_back">#0A0B13</color>
+    <color name="arrow_color">#c9ced6</color>
+    <color name="antivirus_text">#7d8187</color>
+    <color name="main_text">#616e7e</color>
+
+    <color name="bottom_nav_selected">#1b58b1</color>
+    <color name="bottom_nav_unselected">#A8A5A5</color>
 </resources>

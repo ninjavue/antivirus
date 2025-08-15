@@ -32,8 +32,8 @@ public class CleanerCircularProgressView extends View {
         bgPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
         bgPaint.setStyle(Paint.Style.STROKE);
         bgPaint.setStrokeWidth(bgStrokeWidth);
-        bgPaint.setColor(0xFF232A36);
-        bgPaint.setShadowLayer(shadowRadius, 0, 0, 0xFF101010);
+        bgPaint.setColor(0xFFF3F4F6);
+        bgPaint.setShadowLayer(shadowRadius, 0, 0, 0xFFF3F4F6);
         setLayerType(LAYER_TYPE_SOFTWARE, bgPaint);
 
         progressPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
