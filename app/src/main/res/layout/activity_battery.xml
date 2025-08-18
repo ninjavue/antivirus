@@ -5,7 +5,10 @@
     android:id="@+id/main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="#f0f1f3"
     tools:context=".BatteryActivity">
+
+    <!-- Header -->
     <LinearLayout
         android:id="@+id/back"
         android:layout_width="match_parent"
@@ -15,7 +18,7 @@
         android:background="@android:color/transparent"
         android:paddingStart="16dp"
         android:paddingEnd="16dp"
-        tools:ignore="MissingConstraints">
+        app:layout_constraintTop_toTopOf="parent">
 
         <ImageView
             android:id="@+id/btnBack"
@@ -24,41 +27,164 @@
             android:src="@drawable/ic_arrow_right"
             android:rotation="180"
             android:contentDescription="@string/back"
-            android:background="?android:attr/selectableItemBackgroundBorderless" />
+            android:background="?android:attr/selectableItemBackgroundBorderless"
+            app:tint="@color/main_text" />
 
         <TextView
             android:id="@+id/tvTitle"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Quvvat"
-            android:textColor="@android:color/black"
+            android:textColor="@color/main_text"
             android:textSize="18sp"
-            android:textStyle="bold"/>
+            android:textStyle="bold"
+            android:layout_marginStart="6dp"/>
     </LinearLayout>
+
+    <!-- Battery progress (markazda) -->
     <FrameLayout
-        android:layout_width="320dp"
-        android:layout_height="320dp"
-        android:layout_gravity="center"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintBottom_toBottomOf="parent"
+        android:id="@+id/batteryContainer"
+        android:layout_width="140dp"
+        android:layout_height="250dp"
+        android:layout_marginTop="32dp"
+        app:layout_constraintTop_toBottomOf="@id/back"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent">
 
         <uz.csec.antivirus.BatteryCircularProgressView
             android:id="@+id/batteryProgressView"
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            />
+            android:layout_height="match_parent" />
 
         <TextView
             android:id="@+id/tvBatteryPercent"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:gravity="center"
-            android:text="50%"
-            android:textColor="@color/black"
-            android:textSize="38sp"
+            android:text="32%"
+            android:textColor="@android:color/black"
+            android:textSize="32sp"
             android:textStyle="bold" />
     </FrameLayout>
 
+    <!-- Qolgan vaqt -->
+    <TextView
+        android:id="@+id/tvRemainingTime"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="2 Hours 34 Min"
+        android:textColor="@color/main_text"
+        android:textSize="20sp"
+        android:textStyle="bold"
+        android:background="@drawable/bg_security_btn"
+        android:backgroundTint="@color/white"
+        android:paddingVertical="15dp"
+        android:paddingHorizontal="45dp"
+        android:layout_marginTop="46dp"
+        app:layout_constraintTop_toBottomOf="@id/batteryContainer"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"/>
+
+    <!-- Switch bo'limlari (pastga yopishtirilgan) -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:paddingBottom="46dp"
+        android:paddingHorizontal="30dp"
+        android:background="@drawable/bottom_card_bg"
+        android:layout_marginTop="24dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:gravity="center_horizontal">
+
+            <View
+                android:layout_width="60dp"
+                android:layout_height="4dp"
+                android:background="#f0f1f3"
+                android:layout_marginTop="20dp"
+                android:layout_marginBottom="30dp"/>
+        </LinearLayout>
+
+
+        <!-- Power Saving -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical">
+
+            <TextView
+                android:id="@+id/tvPowerSavingMode"
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:layout_height="wrap_content"
+                android:text="Active Power Saving Mode"
+                android:textColor="@android:color/black"
+                android:textSize="16sp" />
+
+            <Switch
+                android:id="@+id/switchPowerSaving"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:checked="true"
+                android:thumbTint="@color/antivirus_text"
+                android:trackTint="@android:color/black"/>
+
+        </LinearLayout>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="4 soat 30 daqiqa qoldi"
+            android:textColor="@android:color/darker_gray"
+            android:textSize="14sp"
+            android:layout_marginTop="4dp"/>
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="2dp"
+            android:background="#f0f1f3"
+            android:layout_marginTop="8dp"
+            />
+
+        <!-- Ultra Power Saving -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:paddingTop="12dp">
+
+            <TextView
+                android:id="@+id/tvUltraPowerSavingMode"
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:layout_height="wrap_content"
+                android:text="Active Ultra Power Saving Mode"
+                android:textColor="@android:color/black"
+                android:textSize="16sp" />
+
+            <Switch
+                android:id="@+id/switchUltraPowerSaving"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:checked="false"
+                android:thumbTint="@color/antivirus_text"
+                android:trackTint="@android:color/black"/>
+        </LinearLayout>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="28 soat 2 daqiqa qoldi"
+            android:textColor="@android:color/darker_gray"
+            android:textSize="14sp"
+            android:layout_marginTop="4dp"/>
+    </LinearLayout>
 </androidx.constraintlayout.widget.ConstraintLayout>

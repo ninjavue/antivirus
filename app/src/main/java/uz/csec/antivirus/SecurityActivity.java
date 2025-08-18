@@ -3,302 +3,311 @@ package uz.csec.antivirus;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
-import android.widget.TextView;
 import android.widget.ImageButton;
-
-import androidx.activity.EdgeToEdge;
+import android.widget.LinearLayout;
+import android.widget.TextView;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.view.WindowInsetsControllerCompat;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.recyclerview.widget.LinearLayoutManager;
-import java.util.HashSet;
-import java.util.Set;
 import java.util.ArrayList;
 import java.util.List;
-import android.location.LocationManager;
-import android.provider.Settings;
-import android.widget.Toast;
-import android.content.Context;
-import android.content.Intent;
-import androidx.core.app.ActivityCompat;
-import androidx.core.content.ContextCompat;
+import android.content.pm.PackageManager;
+import android.content.pm.ApplicationInfo;
+import android.content.pm.PackageInfo;
+import android.graphics.drawable.Drawable;
 
 public class SecurityActivity extends AppCompatActivity {
     static {
         System.loadLibrary("antivirus");
     }
 
-    private RecyclerView rvDangerousApps, rvPermissions;
-    private TextView tvRootStatus, tvWifiSecurity;
-    private Button btnCheckSecurity;
-    private DangerousAppsAdapter dangerousAppsAdapter;
-    private PermissionsAdapter permissionsAdapter;
-    private static final int REQ_CODE_LOCATION = 101;
-    private boolean pendingWifiCheck = false;
+    private RecyclerView rvDangerousApps, rvSafeApps;
+    private AppCardAdapter dangerousAppsAdapter;
+    private AppCardAdapter safeAppsAdapter;
+    private LinearLayout dangerousAppsSection, safeAppsSection;
+    private Button btnDangerousApps, btnSafeApps;
+    private List<AppCardItem> dangerousAppsList, safeAppsList;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        WindowInsetsControllerCompat insetsController =
+                new WindowInsetsControllerCompat(getWindow(), getWindow().getDecorView());
+        insetsController.setAppearanceLightStatusBars(true);
         setContentView(R.layout.activity_security);
 
         rvDangerousApps = findViewById(R.id.rv_dangerous_apps);
-        rvPermissions = findViewById(R.id.rv_permissions);
-        tvRootStatus = findViewById(R.id.tv_root_status);
-        tvWifiSecurity = findViewById(R.id.tv_wifi_security);
+        rvSafeApps = findViewById(R.id.rv_safe_apps);
+        dangerousAppsSection = findViewById(R.id.dangerous_apps_section);
+        safeAppsSection = findViewById(R.id.safe_apps_section);
+        btnDangerousApps = findViewById(R.id.btn_dangerous_apps);
+        btnSafeApps = findViewById(R.id.btn_safe_apps);
         ImageButton btnBack = findViewById(R.id.btn_back);
+        TextView tv_security_title = findViewById(R.id.tv_security_title);
         btnBack.setOnClickListener(v -> finish());
+        tv_security_title.setOnClickListener(v -> finish());
 
-        dangerousAppsAdapter = new DangerousAppsAdapter();
-        permissionsAdapter = new PermissionsAdapter();
+        dangerousAppsAdapter = new AppCardAdapter(this);
+        safeAppsAdapter = new AppCardAdapter(this);
+        
         rvDangerousApps.setLayoutManager(new LinearLayoutManager(this));
         rvDangerousApps.setAdapter(dangerousAppsAdapter);
-        rvPermissions.setLayoutManager(new LinearLayoutManager(this));
-        rvPermissions.setAdapter(permissionsAdapter);
+        rvSafeApps.setLayoutManager(new LinearLayoutManager(this));
+        rvSafeApps.setAdapter(safeAppsAdapter);
 
-        // Show all info immediately
-        updateSecurityInfo();
+        // Set up button click listeners
+        btnDangerousApps.setOnClickListener(v -> showDangerousApps());
+        btnSafeApps.setOnClickListener(v -> showSafeApps());
+
+        // Load app data
+        loadAppData();
+        
+        // Show dangerous apps by default
+        showDangerousApps();
+        
+        // Set initial button colors
+        btnDangerousApps.setTextColor(getResources().getColor(android.R.color.white));
+        btnSafeApps.setTextColor(getResources().getColor(android.R.color.black));
     }
 
-    private void updateSecurityInfo() {
-        dangerousAppsAdapter.submitList(getDangerousAppsListModel(SecurityActivity.this));
-        permissionsAdapter.submitList(getPermissionAppsListModel(SecurityActivity.this));
-        tvRootStatus.setText(getRootStatus());
-        if (ContextCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) != android.content.pm.PackageManager.PERMISSION_GRANTED) {
-            pendingWifiCheck = true;
-            ActivityCompat.requestPermissions(this, new String[]{android.Manifest.permission.ACCESS_FINE_LOCATION}, REQ_CODE_LOCATION);
-        } else {
-            showWifiInfo();
+    private void showDangerousApps() {
+        dangerousAppsSection.setVisibility(View.VISIBLE);
+        safeAppsSection.setVisibility(View.GONE);
+        
+        // Update button styles
+        btnDangerousApps.setBackgroundResource(R.drawable.bg_security_btn);
+        btnDangerousApps.setTextColor(getResources().getColor(android.R.color.white));
+        btnSafeApps.setBackgroundResource(R.drawable.btn_optimize_disabled_bg);
+        btnSafeApps.setTextColor(getResources().getColor(android.R.color.black));
+        
+        // Show message if no dangerous apps
+        if (dangerousAppsList.isEmpty()) {
+            showNoAppsMessage(dangerousAppsSection, "Xavfli ilovalar topilmadi");
         }
     }
 
-    @Override
-    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        if (requestCode == REQ_CODE_LOCATION) {
-            if (grantResults.length > 0 && grantResults[0] == android.content.pm.PackageManager.PERMISSION_GRANTED) {
-                if (pendingWifiCheck) {
-                    showWifiInfo();
-                    pendingWifiCheck = false;
-                }
+    private void showSafeApps() {
+        dangerousAppsSection.setVisibility(View.GONE);
+        safeAppsSection.setVisibility(View.VISIBLE);
+        
+        // Update button styles
+        btnDangerousApps.setBackgroundResource(R.drawable.btn_optimize_disabled_bg);
+        btnDangerousApps.setTextColor(getResources().getColor(android.R.color.black));
+        btnSafeApps.setBackgroundResource(R.drawable.bg_security_btn);
+        btnSafeApps.setTextColor(getResources().getColor(android.R.color.white));
+        
+        // Show message if no safe apps
+        if (safeAppsList.isEmpty()) {
+            showNoAppsMessage(safeAppsSection, "Xavfsiz ilovalar topilmadi");
+        }
+    }
+
+    private void showNoAppsMessage(LinearLayout container, String message) {
+        // Remove existing views
+        container.removeAllViews();
+        
+        // Add message TextView
+        TextView messageView = new TextView(this);
+        messageView.setText(message);
+        messageView.setTextSize(16); // Changed from 16sp to 16
+        messageView.setTextColor(getResources().getColor(android.R.color.darker_gray));
+        messageView.setGravity(android.view.Gravity.CENTER);
+        messageView.setPadding(32, 64, 32, 64);
+        
+        container.addView(messageView);
+    }
+
+    private void loadAppData() {
+        List<AppCardItem> userApps = getUserInstalledApps();
+        dangerousAppsList = new ArrayList<>();
+        safeAppsList = new ArrayList<>();
+        
+        for (AppCardItem app : userApps) {
+            if (hasVirusLikePermissions(app)) {
+                dangerousAppsList.add(app);
             } else {
-                tvWifiSecurity.setText("Joylashuv ruxsati berilmadi, Wi-Fi ma'lumotlari olinmaydi");
+                safeAppsList.add(app);
             }
         }
+        
+        dangerousAppsAdapter.submitList(dangerousAppsList);
+        safeAppsAdapter.submitList(safeAppsList);
     }
 
-    private void showWifiInfo() {
-        LocationManager locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
-        boolean isLocationEnabled = locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)
-                || locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER);
-        if (!isLocationEnabled) {
-            Toast.makeText(this, "Wi-Fi ma'lumotlari uchun joylashuvni yoqing!", Toast.LENGTH_LONG).show();
-            startActivity(new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS));
-            tvWifiSecurity.setText("Joylashuv yoqilmagan!");
-        } else {
-            tvWifiSecurity.setText(getWifiSecurity());
-        }
-    }
-
-    public native String getDangerousApps();
-    public native String getPermissionsControl();
-    public native String getRootStatus();
-    public native String getWifiSecurity();
-
-    public static java.util.List<String> getUserInstalledPackages(android.content.Context context) {
-        android.content.pm.PackageManager pm = context.getPackageManager();
-        java.util.List<android.content.pm.ApplicationInfo> apps = pm.getInstalledApplications(0);
-        java.util.List<String> userPackages = new java.util.ArrayList<>();
-        for (android.content.pm.ApplicationInfo app : apps) {
-            if ((app.flags & android.content.pm.ApplicationInfo.FLAG_SYSTEM) == 0 && (app.flags & android.content.pm.ApplicationInfo.FLAG_UPDATED_SYSTEM_APP) == 0) {
-                userPackages.add(app.packageName);
+    private boolean hasVirusLikePermissions(AppCardItem app) {
+        // Check if app has dangerous permissions that are typical for malware
+        for (PermissionItem permission : app.grantedPermissions) {
+            if (isVirusLikePermission(permission.name)) {
+                return true;
             }
         }
-        return userPackages;
+        return false;
     }
 
-    public static String getDangerousAppsList(android.content.Context context) {
-        StringBuilder sb = new StringBuilder();
-        android.content.pm.PackageManager pm = context.getPackageManager();
-        String[] dangerousPermissions = new String[] {
-            android.Manifest.permission.READ_SMS,
-            android.Manifest.permission.RECEIVE_SMS,
-            android.Manifest.permission.SEND_SMS,
-            android.Manifest.permission.READ_CONTACTS,
-            android.Manifest.permission.WRITE_CONTACTS,
-            android.Manifest.permission.CAMERA,
-            android.Manifest.permission.RECORD_AUDIO,
-            android.Manifest.permission.ACCESS_FINE_LOCATION,
-            android.Manifest.permission.SYSTEM_ALERT_WINDOW
+    private boolean isVirusLikePermission(String permissionName) {
+        String[] virusLikePermissions = {
+            "SMS o'qish",
+            "SMS yuborish", 
+            "Telefon qilish",
+            "Qo'ng'iroqlar tarixini o'qish",
+            "Qo'ng'iroqlar tarixini yozish",
+            "Oynalar ustida ko'rsatish",
+            "Tana sensorlari",
+            "Media joylashuv"
         };
-        java.util.List<String> userPackages = getUserInstalledPackages(context);
-        for (String packageName : userPackages) {
-            try {
-                android.content.pm.PackageInfo pkgInfo = pm.getPackageInfo(packageName, android.content.pm.PackageManager.GET_PERMISSIONS);
-                String[] perms = pkgInfo.requestedPermissions;
-                if (perms != null) {
-                    for (String perm : dangerousPermissions) {
-                        for (String p : perms) {
-                            if (perm.equals(p)) {
-                                sb.append(pm.getApplicationLabel(pkgInfo.applicationInfo)).append(" (" + packageName + ")\n");
-                                break;
-                            }
-                        }
-                    }
-                }
-            } catch (Exception ignored) {}
+        
+        for (String virusPerm : virusLikePermissions) {
+            if (permissionName.equals(virusPerm)) {
+                return true;
+            }
         }
-        return sb.length() == 0 ? "Virus yoki shubhali ilovalar topilmadi" : sb.toString();
+        return false;
     }
 
-    public static String getAppsWithSensitivePermissions(android.content.Context context) {
-        StringBuilder sb = new StringBuilder();
-        android.content.pm.PackageManager pm = context.getPackageManager();
-        String[] sensitive = new String[] {
-            android.Manifest.permission.CAMERA,
-            android.Manifest.permission.RECORD_AUDIO,
-            android.Manifest.permission.ACCESS_FINE_LOCATION
-        };
-        java.util.List<String> userPackages = getUserInstalledPackages(context);
-        for (String packageName : userPackages) {
-            try {
-                android.content.pm.ApplicationInfo app = pm.getApplicationInfo(packageName, 0);
-                boolean found = false;
-                for (String perm : sensitive) {
-                    int granted = pm.checkPermission(perm, packageName);
-                    if (granted == android.content.pm.PackageManager.PERMISSION_GRANTED) {
-                        sb.append(pm.getApplicationLabel(app)).append(" (" + packageName + ")\n");
-                        found = true;
-                        break;
-                    }
-                }
-            } catch (Exception ignored) {}
+    private List<AppCardItem> getUserInstalledApps() {
+        List<AppCardItem> apps = new ArrayList<>();
+        PackageManager pm = getPackageManager();
+        List<ApplicationInfo> installedApps = pm.getInstalledApplications(PackageManager.GET_META_DATA);
+        
+        String myPackage = getPackageName();
+        
+        for (ApplicationInfo appInfo : installedApps) {
+            // Skip system apps, updated system apps, and our own app
+            if ((appInfo.flags & ApplicationInfo.FLAG_SYSTEM) != 0 || 
+                (appInfo.flags & ApplicationInfo.FLAG_UPDATED_SYSTEM_APP) != 0 ||
+                appInfo.packageName.equals(myPackage) ||
+                appInfo.packageName.startsWith("com.android.") ||
+                appInfo.packageName.startsWith("android.") ||
+                appInfo.packageName.startsWith("com.google.android.") ||
+                appInfo.packageName.startsWith("com.samsung.") ||
+                appInfo.packageName.startsWith("com.sec.") ||
+                appInfo.packageName.startsWith("com.wssyncmldm") ||
+                appInfo.packageName.startsWith("com.sec.android.") ||
+                appInfo.packageName.equals("com.android.settings") ||
+                appInfo.packageName.equals("com.android.vending") ||
+                appInfo.packageName.equals("com.google.android.gms") ||
+                appInfo.packageName.equals("com.google.android.gsf")) {
+                continue;
+            }
+            
+            AppCardItem app = createAppCardItem(appInfo.packageName);
+            if (app != null) {
+                apps.add(app);
+            }
         }
-        return sb.length() == 0 ? "Kamera, mikrofon yoki joylashuvga ruxsat so‘ragan ilovalar topilmadi" : sb.toString();
+        
+        return apps;
     }
 
-    public static String getRootStatusJava() {
-        String[] paths = {"/system/xbin/su", "/system/bin/su", "/system/app/Superuser.apk"};
-        for (String path : paths) {
-            if (new java.io.File(path).exists()) return "Qurilma root qilingan";
-        }
-        String buildTags = android.os.Build.TAGS;
-        if (buildTags != null && buildTags.contains("test-keys")) return "Qurilma root qilingan";
-        return "Qurilma root qilinmagan";
-    }
-
-    public static String getWifiSecurityJava(android.content.Context context) {
+    private AppCardItem createAppCardItem(String packageName) {
         try {
-            android.net.wifi.WifiManager wifiManager = (android.net.wifi.WifiManager) context.getSystemService(android.content.Context.WIFI_SERVICE);
-            if (wifiManager == null || !wifiManager.isWifiEnabled()) return "Wi-Fi o'chirilgan";
-            android.net.wifi.WifiInfo info = wifiManager.getConnectionInfo();
-            String ssid = info.getSSID();
-            int networkId = info.getNetworkId();
-            if (networkId == -1 || ssid == null || ssid.equals("<unknown ssid>")) {
-                return "Wi-Fi ulanmagan yoki joylashuv ruxsati yo'q";
+            PackageManager pm = getPackageManager();
+            ApplicationInfo appInfo = pm.getApplicationInfo(packageName, 0);
+            PackageInfo packageInfo = pm.getPackageInfo(packageName, PackageManager.GET_PERMISSIONS);
+            
+            Drawable icon = pm.getApplicationIcon(appInfo);
+            String appName = pm.getApplicationLabel(appInfo).toString();
+            
+            List<PermissionItem> grantedPermissions = getGrantedPermissions(packageInfo, pm);
+            List<PermissionItem> nonGrantedPermissions = getNonGrantedPermissions(packageInfo, pm);
+            
+            return new AppCardItem(icon, appName, packageName, grantedPermissions, nonGrantedPermissions, false);
+            
+        } catch (PackageManager.NameNotFoundException e) {
+            return null;
+        }
+    }
+
+    private List<PermissionItem> getGrantedPermissions(PackageInfo packageInfo, PackageManager pm) {
+        List<PermissionItem> permissions = new ArrayList<>();
+        
+        if (packageInfo.requestedPermissions != null) {
+            for (String permission : packageInfo.requestedPermissions) {
+                int permissionStatus = pm.checkPermission(permission, packageInfo.packageName);
+                if (permissionStatus == PackageManager.PERMISSION_GRANTED) {
+                    // Only add dangerous permissions, skip normal permissions
+                    if (isDangerousPermission(permission)) {
+                        permissions.add(new PermissionItem(getPermissionDisplayName(permission), true, true));
+                    }
+                }
             }
-            StringBuilder sb = new StringBuilder();
-            sb.append("SSID: ").append(ssid).append("\n");
-            sb.append("BSSID: ").append(info.getBSSID()).append("\n");
-            sb.append("IP: ").append(android.text.format.Formatter.formatIpAddress(info.getIpAddress())).append("\n");
-            return sb.toString();
-        } catch (Exception e) {
-            return "Wi-Fi ma'lumotlarini olishda xatolik";
         }
+        
+        return permissions;
     }
 
-    public static List<DangerousApp> getDangerousAppsListModel(android.content.Context context) {
-        List<DangerousApp> result = new ArrayList<>();
-        android.content.pm.PackageManager pm = context.getPackageManager();
-        String[] dangerousPermissions = new String[] {
-            android.Manifest.permission.READ_SMS,
-            android.Manifest.permission.RECEIVE_SMS,
-            android.Manifest.permission.SEND_SMS,
-            android.Manifest.permission.READ_CONTACTS,
-            android.Manifest.permission.WRITE_CONTACTS,
-            android.Manifest.permission.CAMERA,
-            android.Manifest.permission.RECORD_AUDIO,
-            android.Manifest.permission.ACCESS_FINE_LOCATION,
-            android.Manifest.permission.SYSTEM_ALERT_WINDOW
-        };
-        List<String> userPackages = getUserInstalledPackages(context);
-        String myPackage = context.getPackageName();
-        Set<String> added = new HashSet<>();
-        for (String packageName : userPackages) {
-            if (packageName.equals(myPackage)) continue;
-            try {
-                android.content.pm.PackageInfo pkgInfo = pm.getPackageInfo(packageName, android.content.pm.PackageManager.GET_PERMISSIONS);
-                String[] perms = pkgInfo.requestedPermissions;
-                if (perms != null) {
-                    for (String perm : dangerousPermissions) {
-                        for (String p : perms) {
-                            if (perm.equals(p)) {
-                                if (!added.contains(packageName)) {
-                                    String reason = getPermissionLabel(context, perm);
-                                    result.add(new DangerousApp(
-                                            pm.getApplicationLabel(pkgInfo.applicationInfo).toString(),
-                                            packageName,
-                                            pm.getApplicationIcon(pkgInfo.applicationInfo),
-                                            reason + " ruxsat so‘ralgan"
-                                    ));
-                                    added.add(packageName);
-                                }
-                                break;
-                            }
-                        }
-                        if (added.contains(packageName)) break;
+    private List<PermissionItem> getNonGrantedPermissions(PackageInfo packageInfo, PackageManager pm) {
+        List<PermissionItem> permissions = new ArrayList<>();
+        
+        if (packageInfo.requestedPermissions != null) {
+            for (String permission : packageInfo.requestedPermissions) {
+                int permissionStatus = pm.checkPermission(permission, packageInfo.packageName);
+                if (permissionStatus != PackageManager.PERMISSION_GRANTED) {
+                    // Only add dangerous permissions, skip normal permissions
+                    if (isDangerousPermission(permission)) {
+                        permissions.add(new PermissionItem(getPermissionDisplayName(permission), true, false));
                     }
                 }
-            } catch (Exception ignored) {}
+            }
         }
-        return result;
+        
+        return permissions;
     }
 
-    public static List<PermissionApp> getPermissionAppsListModel(android.content.Context context) {
-        List<PermissionApp> result = new ArrayList<>();
-        android.content.pm.PackageManager pm = context.getPackageManager();
-        String[] sensitive = new String[] {
-            android.Manifest.permission.CAMERA,
-            android.Manifest.permission.RECORD_AUDIO,
-            android.Manifest.permission.ACCESS_FINE_LOCATION
+    private boolean isDangerousPermission(String permission) {
+        String[] dangerousPermissions = {
+            "android.permission.CAMERA",
+            "android.permission.READ_CONTACTS",
+            "android.permission.WRITE_CONTACTS", 
+            "android.permission.ACCESS_FINE_LOCATION",
+            "android.permission.ACCESS_COARSE_LOCATION",
+            "android.permission.RECORD_AUDIO",
+            "android.permission.READ_SMS",
+            "android.permission.SEND_SMS",
+            "android.permission.READ_PHONE_STATE",
+            "android.permission.CALL_PHONE",
+            "android.permission.READ_CALL_LOG",
+            "android.permission.WRITE_CALL_LOG",
+            "android.permission.READ_EXTERNAL_STORAGE",
+            "android.permission.WRITE_EXTERNAL_STORAGE",
+            "android.permission.SYSTEM_ALERT_WINDOW",
+            "android.permission.READ_CALENDAR",
+            "android.permission.WRITE_CALENDAR",
+            "android.permission.BODY_SENSORS",
+            "android.permission.ACCESS_MEDIA_LOCATION"
         };
-        List<String> userPackages = getUserInstalledPackages(context);
-        String myPackage = context.getPackageName();
-        for (String packageName : userPackages) {
-            if (packageName.equals(myPackage)) continue;
-            try {
-                android.content.pm.PackageInfo pkgInfo = pm.getPackageInfo(packageName, android.content.pm.PackageManager.GET_PERMISSIONS);
-                String[] perms = pkgInfo.requestedPermissions;
-                List<String> granted = new ArrayList<>();
-                if (perms != null) {
-                    for (String perm : sensitive) {
-                        for (String p : perms) {
-                            if (perm.equals(p)) {
-                                granted.add(getPermissionLabel(context, perm));
-                                break;
-                            }
-                        }
-                    }
-                }
-                if (!granted.isEmpty()) {
-                    result.add(new PermissionApp(
-                            pm.getApplicationLabel(pkgInfo.applicationInfo).toString(),
-                            packageName,
-                            pm.getApplicationIcon(pkgInfo.applicationInfo),
-                            granted
-                    ));
-                }
-            } catch (Exception ignored) {}
+        
+        for (String dangerous : dangerousPermissions) {
+            if (dangerous.equals(permission)) {
+                return true;
+            }
         }
-        return result;
+        return false;
     }
 
-    public static String getPermissionLabel(android.content.Context context, String permission) {
-        try {
-            android.content.pm.PackageManager pm = context.getPackageManager();
-            android.content.pm.PermissionInfo info = pm.getPermissionInfo(permission, 0);
-            CharSequence label = info.loadLabel(pm);
-            return label != null ? label.toString() : permission;
-        } catch (Exception e) {
-            return permission;
+    private String getPermissionDisplayName(String permission) {
+        switch (permission) {
+            case "android.permission.CAMERA": return "Kamera";
+            case "android.permission.READ_CONTACTS": return "Kontaktlarni o'qish";
+            case "android.permission.WRITE_CONTACTS": return "Kontaktlarni yozish";
+            case "android.permission.ACCESS_FINE_LOCATION": return "Aniq joylashuv";
+            case "android.permission.ACCESS_COARSE_LOCATION": return "Taxminiy joylashuv";
+            case "android.permission.RECORD_AUDIO": return "Ovozni yozish";
+            case "android.permission.READ_SMS": return "SMS o'qish";
+            case "android.permission.SEND_SMS": return "SMS yuborish";
+            case "android.permission.READ_PHONE_STATE": return "Telefon holatini o'qish";
+            case "android.permission.CALL_PHONE": return "Telefon qilish";
+            case "android.permission.READ_CALL_LOG": return "Qo'ng'iroqlar tarixini o'qish";
+            case "android.permission.WRITE_CALL_LOG": return "Qo'ng'iroqlar tarixini yozish";
+            case "android.permission.READ_EXTERNAL_STORAGE": return "Xotira o'qish";
+            case "android.permission.WRITE_EXTERNAL_STORAGE": return "Xotira yozish";
+            case "android.permission.SYSTEM_ALERT_WINDOW": return "Oynalar ustida ko'rsatish";
+            case "android.permission.READ_CALENDAR": return "Kalendarni o'qish";
+            case "android.permission.WRITE_CALENDAR": return "Kalendarni yozish";
+            case "android.permission.BODY_SENSORS": return "Tana sensorlari";
+            case "android.permission.ACCESS_MEDIA_LOCATION": return "Media joylashuv";
+            default: return permission;
         }
     }
 }

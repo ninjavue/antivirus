@@ -3,7 +3,9 @@ package uz.csec.antivirus;
 import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.graphics.Color;
 import android.os.BatteryManager;
+import android.os.Build;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.ImageView;
@@ -13,6 +15,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
+import androidx.core.view.WindowInsetsControllerCompat;
 
 public class BatteryActivity extends AppCompatActivity {
 
@@ -20,11 +23,16 @@ public class BatteryActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         EdgeToEdge.enable(this);
+        WindowInsetsControllerCompat insetsController =
+                new WindowInsetsControllerCompat(getWindow(), getWindow().getDecorView());
+        insetsController.setAppearanceLightStatusBars(true);
         setContentView(R.layout.activity_battery);
 
         @SuppressLint({"MissingInflatedId", "LocalSuppress"}) ImageView btnBack = findViewById(R.id.btnBack);
         @SuppressLint({"MissingInflatedId", "LocalSuppress"}) TextView tvTitle = findViewById(R.id.tvTitle);
-
+        TextView tvRemainingTime = findViewById(R.id.tvRemainingTime);
+        TextView tvPowerSavingMode = findViewById(R.id.tvPowerSavingMode);
+        TextView tvUltraPowerSavingMode = findViewById(R.id.tvUltraPowerSavingMode);
 
         View.OnClickListener backListener = new View.OnClickListener() {
             @Override
@@ -50,7 +58,13 @@ public class BatteryActivity extends AppCompatActivity {
         TextView tvPercent = findViewById(R.id.tvBatteryPercent);
         progressView.animateProgress(batteryPercent / 100f);
         animatePercentText(tvPercent, 0, batteryPercent, "%d%%", 1200);
+
+        // Update remaining time and power saving modes
+        tvRemainingTime.setText(String.format("%d Soat %d daqiqa", 2, 34));
+        tvPowerSavingMode.setText("Faol energiya tejash rejimi");
+        tvUltraPowerSavingMode.setText("Faol ultra energiya tejash rejimi");
     }
+
     private int getBatteryPercent() {
         IntentFilter ifilter = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);
         Intent batteryStatus = registerReceiver(null, ifilter);

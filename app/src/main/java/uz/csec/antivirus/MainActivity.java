@@ -28,6 +28,8 @@ import android.widget.Toast;
 import android.app.AlertDialog;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
+import androidx.core.view.WindowInsetsControllerCompat;
+
 import uz.csec.antivirus.CircularProgressView;
 
 public class MainActivity extends AppCompatActivity {
@@ -46,6 +48,9 @@ public class MainActivity extends AppCompatActivity {
                 startActivity(intent);
             }
         }
+        WindowInsetsControllerCompat insetsController =
+                new WindowInsetsControllerCompat(getWindow(), getWindow().getDecorView());
+        insetsController.setAppearanceLightStatusBars(true);
         setContentView(R.layout.activity_main);
         setupBottomNavigation();
 

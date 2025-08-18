@@ -13,6 +13,7 @@ public class AntivirusDatabase extends SQLiteOpenHelper {
     }
 
     @Override
+
     public void onCreate(SQLiteDatabase db) {
         String CREATE_TABLE = "CREATE TABLE virus_files (" +
                 "id INTEGER PRIMARY KEY AUTOINCREMENT, " +

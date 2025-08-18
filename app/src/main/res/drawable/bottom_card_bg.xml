@@ -8,16 +8,16 @@
             <gradient
                 android:type="linear"
                 android:angle="270"
-                android:startColor="#66FFFFFF"
-                android:centerColor="#22FFFFFF"
-                android:endColor="#181B23"/>
+                android:startColor="#FFFFFF"
+                android:centerColor="#FFFFFF"
+                android:endColor="#FFFFFF"/>
         </shape>
     </item>
     <!-- Main card background (only top corners rounded) -->
     <item>
         <shape android:shape="rectangle">
             <corners android:topLeftRadius="32dp" android:topRightRadius="32dp" android:bottomLeftRadius="0dp" android:bottomRightRadius="0dp"/>
-            <solid android:color="#181B23"/>
+            <solid android:color="#FFFFFF"/>
         </shape>
     </item>
 </layer-list> 

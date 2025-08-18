@@ -14,6 +14,8 @@ import android.os.Build;
 import android.os.Environment;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
+import androidx.core.view.WindowInsetsControllerCompat;
+
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
@@ -67,6 +69,9 @@ public class CleanerActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        WindowInsetsControllerCompat insetsController =
+                new WindowInsetsControllerCompat(getWindow(), getWindow().getDecorView());
+        insetsController.setAppearanceLightStatusBars(true);
         setContentView(R.layout.activity_cleaner);
 
         ImageView btnBack = findViewById(R.id.btnBack);

@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Tanlangan holatda yashil fon -->
+    <item android:color="#4CAF50" android:state_checked="true"/>
+    <!-- Tanlanmagan holatda kulrang fon -->
+    <item android:color="#BDBDBD"/>
+</selector>

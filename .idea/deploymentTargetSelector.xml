@@ -4,10 +4,10 @@
     <selectionStates>
       <SelectionState runConfigName="app">
         <option name="selectionMode" value="DROPDOWN" />
-        <DropdownSelection timestamp="2025-08-15T13:36:01.887698030Z">
+        <DropdownSelection timestamp="2025-08-16T09:36:01.667054100Z">
           <Target type="DEFAULT_BOOT">
             <handle>
-              <DeviceId pluginId="LocalEmulator" identifier="path=/home/zirh-mobil/.android/avd/Android.avd" />
+              <DeviceId pluginId="PhysicalDevice" identifier="serial=2601294910EA0DPP" />
             </handle>
           </Target>
         </DropdownSelection>

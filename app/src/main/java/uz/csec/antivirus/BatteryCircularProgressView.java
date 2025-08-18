@@ -4,21 +4,24 @@ import android.animation.ValueAnimator;
 import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Paint;
+import android.graphics.Path;
 import android.graphics.RectF;
-import android.graphics.SweepGradient;
 import android.util.AttributeSet;
 import android.view.View;
+
 import androidx.annotation.Nullable;
 
 public class BatteryCircularProgressView extends View {
     private Paint bgPaint;
     private Paint progressPaint;
-    private RectF oval;
+    private RectF batteryBodyRect;
+    private Path batteryPath;
     private float progress = 0f;
-    private int[] gradientColors = {0xFF4B8AFF, 0xFF7B61FF, 0xFF00E0FF, 0xFF4B8AFF};
-    private float strokeWidth = 48f;
-    private float shadowRadius = 18f;
-    private int extraPad = 40;
+    private float strokeWidth = 5f;
+    private float cornerRadius = 30f;
+    private float capHeight = 40f;
+    private float capWidthRatio = 0.3f;
+    private int extraPad = 5;
 
     public BatteryCircularProgressView(Context context, @Nullable AttributeSet attrs) {
         super(context, attrs);
@@ -27,39 +30,77 @@ public class BatteryCircularProgressView extends View {
 
     private void init() {
         bgPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
-        bgPaint.setStyle(Paint.Style.STROKE);
-        bgPaint.setStrokeWidth(strokeWidth);
-        bgPaint.setColor(0xFF232A36);
-        bgPaint.setShadowLayer(shadowRadius, 0, 0, 0xFF101010);
-        setLayerType(LAYER_TYPE_SOFTWARE, bgPaint);
+        bgPaint.setStyle(Paint.Style.FILL);
+        bgPaint.setColor(0xFFFFFFFF); // oq
 
         progressPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
-        progressPaint.setStyle(Paint.Style.STROKE);
-        progressPaint.setStrokeWidth(strokeWidth);
-        progressPaint.setStrokeCap(Paint.Cap.ROUND);
-        progressPaint.setShadowLayer(shadowRadius, 0, 0, 0xFF00BFFF);
-        setLayerType(LAYER_TYPE_SOFTWARE, progressPaint);
+        progressPaint.setStyle(Paint.Style.FILL);
+        progressPaint.setColor(0xFFFE945A); // orange #fe945a
     }
 
     @Override
     protected void onSizeChanged(int w, int h, int oldw, int oldh) {
         super.onSizeChanged(w, h, oldw, oldh);
-        float pad = strokeWidth / 2f + shadowRadius;
-        float shift = 10 * getResources().getDisplayMetrics().density;
-        float left = pad + (extraPad / 2f) - shift;
-        float top = pad + (extraPad / 2f) - shift;
-        float right = w - pad - (extraPad / 2f) - shift;
-        float bottom = h - pad - (extraPad / 2f) - shift;
-        oval = new RectF(left, top, right, bottom);
-        SweepGradient sweepGradient = new SweepGradient(w/2f, h/2f, gradientColors, null);
-        progressPaint.setShader(sweepGradient);
+        float pad = strokeWidth / 2f;
+        float left = pad + (extraPad / 2f);
+        float top = pad + (extraPad / 2f) + capHeight; // Start below cap
+        float right = w - pad - (extraPad / 2f);
+        float bottom = h - pad - (extraPad / 2f);
+        batteryBodyRect = new RectF(left, top, right, bottom);
+
+        batteryPath = new Path();
+        // Battery body with rounded corners
+        batteryPath.addRoundRect(batteryBodyRect, cornerRadius, cornerRadius, Path.Direction.CW);
+
+        // --- Battery cap with top-left & top-right radius ---
+        float capLeft = left + (right - left) * (1 - capWidthRatio) / 2;
+        float capRight = right - (right - left) * (1 - capWidthRatio) / 2;
+        float capTop = top - capHeight;
+        float capBottom = top;
+
+        RectF capRect = new RectF(capLeft, capTop, capRight, capBottom);
+
+        float[] capRadii = new float[]{
+                cornerRadius, cornerRadius, // top-left
+                cornerRadius, cornerRadius, // top-right
+                0f, 0f,                     // bottom-right
+                0f, 0f                      // bottom-left
+        };
+
+        Path capPath = new Path();
+        capPath.addRoundRect(capRect, capRadii, Path.Direction.CW);
+
+        // combine both
+        batteryPath.addPath(capPath);
     }
 
     @Override
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
-        canvas.drawArc(oval, 0, 360, false, bgPaint);
-        canvas.drawArc(oval, -90, progress * 360, false, progressPaint);
+        // Draw battery outline and cap
+        canvas.drawPath(batteryPath, bgPaint);
+
+        // Draw progress (filled portion from bottom up)
+        if (progress > 0) {
+            float progressHeight = batteryBodyRect.height() * progress;
+            RectF progressRect = new RectF(
+                    batteryBodyRect.left,
+                    batteryBodyRect.bottom - progressHeight,
+                    batteryBodyRect.right,
+                    batteryBodyRect.bottom
+            );
+
+            float[] progressRadii = new float[]{
+                    0f, 0f,                      // top-left
+                    0f, 0f,                      // top-right
+                    cornerRadius, cornerRadius,  // bottom-right
+                    cornerRadius, cornerRadius   // bottom-left
+            };
+
+            Path progressPath = new Path();
+            progressPath.addRoundRect(progressRect, progressRadii, Path.Direction.CW);
+            canvas.drawPath(progressPath, progressPaint);
+        }
     }
 
     @Override
@@ -70,7 +111,7 @@ public class BatteryCircularProgressView extends View {
     }
 
     public void setProgress(float value) {
-        this.progress = value;
+        this.progress = Math.max(0f, Math.min(1f, value));
         invalidate();
     }
 

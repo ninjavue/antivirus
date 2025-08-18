@@ -3,7 +3,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/main"
-    android:background="#232A36"
+    android:background="#f5f8fb"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context=".SecurityActivity">
@@ -15,6 +15,7 @@
         android:paddingLeft="0dp"
         android:paddingRight="0dp"
         android:paddingBottom="0dp">
+        
         <LinearLayout
             android:id="@+id/security_info_container"
             android:layout_width="match_parent"
@@ -23,140 +24,115 @@
             android:showDividers="middle">
 
             <LinearLayout
-                android:id="@+id/security_header"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:gravity="center_vertical"
-                android:paddingTop="10dp"
-                android:background="#0A0B13">
+                android:background="@drawable/bg_progress"
+                android:orientation="vertical">
 
-                <ImageButton
-                    android:id="@+id/btn_back"
-                    android:layout_width="40dp"
-                    android:layout_height="40dp"
-                    android:background="?attr/selectableItemBackgroundBorderless"
-                    android:src="@drawable/ic_back_arrow"
-                    android:layout_marginLeft="10dp"
-                    android:contentDescription="Orqaga qaytish"
-                    android:scaleType="center"
-                    android:elevation="4dp"
-                    android:padding="6dp"/>
-
-                <TextView
-                    android:id="@+id/tv_security_title"
-                    android:layout_width="0dp"
+                <!-- Header -->
+                <LinearLayout
+                    android:id="@+id/security_header"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:text="Xavfsizlik"
-                    android:textSize="20sp"
-                    android:textStyle="bold"
-                    android:textColor="#fff"
-                   />
-            </LinearLayout>
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:paddingTop="10dp"
+                    android:background="@android:color/transparent">
 
-            <com.google.android.material.card.MaterialCardView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:background="#0A0B13"
-                >
+                    <ImageButton
+                        android:id="@+id/btn_back"
+                        android:layout_width="40dp"
+                        android:layout_height="40dp"
+                        android:background="?attr/selectableItemBackgroundBorderless"
+                        android:src="@drawable/ic_back_arrow"
+                        android:layout_marginLeft="10dp"
+                        android:scaleType="center"
+                        android:elevation="4dp"
+                        app:tint="@color/antivirus_text" />
+
+                    <TextView
+                        android:id="@+id/tv_security_title"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="Xavfsizlik"
+                        android:textSize="18sp"
+                        android:textStyle="bold"
+                        android:layout_marginLeft="-6dp"
+                        android:textColor="@color/antivirus_text"/>
+                </LinearLayout>
+
+                <!-- Tab Buttons -->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    android:background="#0A0B13"
-                    android:padding="16dp">
-                    <TextView
-                        android:layout_width="wrap_content"
+                    android:orientation="horizontal"
+                    android:padding="16dp"
+                    android:gravity="center">
+
+                    <Button
+                        android:id="@+id/btn_dangerous_apps"
+                        android:layout_width="0dp"
                         android:layout_height="wrap_content"
-                        android:text="Xavfli ilovalar ro‘yxati"
-                        android:textStyle="bold"
-                        android:textSize="18sp"/>
+                        android:layout_weight="1"
+                        android:text="Xavfli ilovalar"
+                        android:textColor="@color/antivirus_text"
+                        android:background="@drawable/bg_security_btn"
+                        android:layout_marginEnd="8dp"
+                        android:padding="12dp"/>
+
+                    <Button
+                        android:id="@+id/btn_safe_apps"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="Xavfsiz ilovalar"
+                        android:textColor="@color/antivirus_text"
+                        android:background="@drawable/bg_security_btn"
+                        android:layout_marginStart="8dp"
+                        android:padding="12dp"/>
+                </LinearLayout>
+
+            </LinearLayout>
+            <!-- Content Container -->
+            <FrameLayout
+                android:id="@+id/content_container"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+                <!-- Dangerous Apps Section -->
+                <LinearLayout
+                    android:id="@+id/dangerous_apps_section"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:background="@android:color/transparent"
+                    android:padding="16dp"
+                    android:visibility="visible">
+                    
                     <androidx.recyclerview.widget.RecyclerView
                         android:id="@+id/rv_dangerous_apps"
                         android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="8dp"/>
+                        android:layout_height="wrap_content"/>
                 </LinearLayout>
-            </com.google.android.material.card.MaterialCardView>
 
-            <com.google.android.material.card.MaterialCardView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:background="#0A0B13"
-                >
+                <!-- Safe Apps Section -->
                 <LinearLayout
+                    android:id="@+id/safe_apps_section"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:background="#0A0B13"
                     android:orientation="vertical"
-                    android:padding="16dp">
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Ruxsatlar nazorati"
-                        android:textStyle="bold"
-                        android:textSize="18sp"/>
+                    android:background="@android:color/transparent"
+                    android:padding="16dp"
+                    android:visibility="gone">
+                    
                     <androidx.recyclerview.widget.RecyclerView
-                        android:id="@+id/rv_permissions"
+                        android:id="@+id/rv_safe_apps"
                         android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="8dp"/>
+                        android:layout_height="wrap_content"/>
                 </LinearLayout>
-            </com.google.android.material.card.MaterialCardView>
 
-            <com.google.android.material.card.MaterialCardView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:background="#0A0B13">
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    android:background="#0A0B13"
-                    android:padding="16dp">
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Root bo‘lish holati"
-                        android:textStyle="bold"
-                        android:textSize="18sp"/>
-                    <TextView
-                        android:id="@+id/tv_root_status"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="8dp"
-                        android:text="Tekshirilmoqda..."
-                        android:textSize="16sp"/>
-                </LinearLayout>
-            </com.google.android.material.card.MaterialCardView>
-
-            <com.google.android.material.card.MaterialCardView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:background="#0A0B13"
-                >
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    android:background="#0A0B13"
-                    android:padding="16dp">
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Wi-Fi xavfsizligi"
-                        android:textStyle="bold"
-                        android:textSize="18sp"/>
-                    <TextView
-                        android:id="@+id/tv_wifi_security"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="8dp"
-                        android:text="Tekshirilmoqda..."
-                        android:textSize="16sp"/>
-                </LinearLayout>
-            </com.google.android.material.card.MaterialCardView>
+            </FrameLayout>
 
         </LinearLayout>
     </ScrollView>
