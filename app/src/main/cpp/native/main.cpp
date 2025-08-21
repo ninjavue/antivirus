@@ -52,7 +52,7 @@ Java_uz_csec_antivirus_NativeLib_getAppCpuUsage(
             if (i == 15) { stime = std::stol(token); break; }
         }
         std::stringstream result;
-        result << "App CPU: " << (utime + stime);
+        result << (utime + stime);
         return env->NewStringUTF(result.str().c_str());
     }
     return env->NewStringUTF("CPU info not found");

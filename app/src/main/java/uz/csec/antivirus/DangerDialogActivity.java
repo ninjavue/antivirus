@@ -27,7 +27,17 @@ public class DangerDialogActivity extends Activity {
             .setTitle(appName + " xavfli ilova!")
             .setMessage(reasons)
             .setCancelable(false)
-            .setPositiveButton("O‘chirish", (dialog, which) -> {
+            .setPositiveButton("Virusni ko'rish", (dialog, which) -> {
+                try {
+                    Intent intent = new Intent(android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
+                    intent.setData(android.net.Uri.parse("package:" + packageName));
+                    intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                    startActivity(intent);
+                } catch (Exception e) {
+                    Log.e("DangerDialogActivity", "App settings open error", e);
+                }
+            })
+            .setNeutralButton("O‘chirish", (dialog, which) -> {
                 Intent intent = new Intent(Intent.ACTION_DELETE);
                 intent.setData(android.net.Uri.parse("package:" + packageName));
                 intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);

@@ -9,6 +9,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
@@ -16,6 +17,8 @@ import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 import androidx.core.view.WindowInsetsControllerCompat;
+
+import kotlin.io.LineReader;
 
 public class BatteryActivity extends AppCompatActivity {
 
@@ -28,7 +31,7 @@ public class BatteryActivity extends AppCompatActivity {
         insetsController.setAppearanceLightStatusBars(true);
         setContentView(R.layout.activity_battery);
 
-        @SuppressLint({"MissingInflatedId", "LocalSuppress"}) ImageView btnBack = findViewById(R.id.btnBack);
+        @SuppressLint({"MissingInflatedId", "LocalSuppress"}) LinearLayout btnBack = findViewById(R.id.back);
         @SuppressLint({"MissingInflatedId", "LocalSuppress"}) TextView tvTitle = findViewById(R.id.tvTitle);
         TextView tvRemainingTime = findViewById(R.id.tvRemainingTime);
         TextView tvPowerSavingMode = findViewById(R.id.tvPowerSavingMode);

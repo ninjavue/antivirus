@@ -16,12 +16,13 @@
         android:gravity="center_horizontal">
         <LinearLayout
             android:id="@+id/back"
-            android:layout_width="match_parent"
-           android:layout_height="wrap_content"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
             android:orientation="horizontal"
-            android:gravity="center_vertical"
-            android:background="@android:color/transparent"
+            android:layout_gravity="start"
             android:paddingStart="16dp"
+            android:paddingTop="10dp"
+            android:background="?android:attr/selectableItemBackgroundBorderless"
             android:paddingEnd="16dp">
 
             <ImageView
@@ -30,14 +31,13 @@
                 android:layout_height="25dp"
                 android:src="@drawable/ic_arrow_white"
                 android:rotation="180"
-                android:contentDescription="@string/back"
-                android:background="?android:attr/selectableItemBackgroundBorderless" />
+                android:contentDescription="@string/back" />
 
             <TextView
                 android:id="@+id/tvTitle"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Antivirus"
+                android:text="@string/antivirus"
                 android:textColor="@android:color/white"
                 android:textSize="18sp"
                 android:textStyle="bold"/>
@@ -48,12 +48,13 @@
             android:layout_height="270dp"
             android:layout_marginTop="22dp" />
 
-        <com.airbnb.lottie.LottieAnimationView
+        <ImageView
             android:id="@+id/lottieScan"
-            android:layout_width="100dp"
-            android:layout_height="100dp"
+            android:layout_width="130dp"
+            android:layout_height="130dp"
             android:layout_gravity="center"
-            android:layout_marginTop="-185dp"
+            android:background="@drawable/logo"
+            android:layout_marginTop="-195dp"
             android:layout_marginBottom="80dp"
             app:lottie_autoPlay="false"
             app:lottie_loop="false"/>
@@ -72,7 +73,7 @@
             android:id="@+id/btnQuickScan"
             android:layout_height="wrap_content"
             android:layout_width="wrap_content"
-            android:text="Tekshirish"
+            android:text="@string/check"
             android:background="@drawable/btn_optimize_bg"
             android:backgroundTint="@null"
             android:textColor="@android:color/white"

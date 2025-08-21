@@ -1,17 +1,51 @@
 <resources>
-    <string name="app_name">Antivirus</string>
-    <string name="optimize">OPTIMIZE</string>
-    <string name="cleaner">Tozalash</string>
-    <string name="antivirus">Antivirus</string>
-    <string name="battery">Quvvat</string>
-    <string name="data">Malumot</string>
-    <string name="security">Xavfsizlik</string>
-    <string name="files">Fayllar</string>
-    <string name="quick_scan">QUICK SCAN</string>
-    <string name="full_scan">Full Scan</string>
-    <string name="update">Yangilanish</string>
+    <string name="app_name" translatable="false">Antivirus</string>
+    <string name="optimize" translatable="false">OPTIMIZE</string>
+    <string name="cleaner" translatable="false">Tozalash</string>
+    <string name="antivirus" translatable="false">Antivirus</string>
+    <string name="battery" translatable="false">Quvvat</string>
+    <string name="data" translatable="false">Ma\'lumot</string>
+    <string name="security" translatable="false">Xavfsizlik</string>
+    <string name="files" translatable="false">Fayllar</string>
+    <string name="quick_scan" translatable="false">QUICK SCAN</string>
+    <string name="full_scan" translatable="false">Full Scan</string>
+    <string name="update" translatable="false">Yangilanish</string>
     <string name="settings">Sozlamalar</string>
-    <string name="optimize1">Fayl tanlash</string>
-    <string name="back">Back</string>
-    <string name="accessibility_service_description">Tashqi manbadan ilova o`rnatishni bloklash uchun xizmat</string>
+    <string name="optimize1" translatable="false">Fayl tanlash</string>
+    <string name="back" translatable="false">Back</string>
+    <string name="accessibility_service_description" translatable="false">Tashqi manbadan ilova o`rnatishni bloklash uchun xizmat</string>
+    <string name="optimize_text" translatable="false">Optimallashtirish\ntaklif etiladi</string>
+    <string name="check" translatable="false">Tekshirish</string>
+    <string name="checking" translatable="false">Tekshirilmoqda</string>
+    <string name="device_virus_programm" translatable="false">Qurulmadagi zararli dasturlar</string>
+    <string name="device_update" translatable="false">Dastur yangilanishi</string>
+    <string name="phone_safe" translatable="false">Telefoningiz xavfsiz holatda</string>
+    <string name="phone_unsafe" translatable="false">Qurulmada zararli dasturlar mavjud</string>
+    <string name="scannery" translatable="false">skanerlandi</string>
+    <string name="big_files" translatable="false">Katta hajmli fayllar</string>
+    <string name="audio_and_video" translatable="false">Audio &amp; video</string>
+    <string name="apps_delete" translatable="false">Ilovalarni o\'chirish</string>
+    <string name="cash_memory" translatable="false">Kesh xotira</string>
+    <string name="unsafe_apps" translatable="false">Xavli ilovalar</string>
+    <string name="safe_apps" translatable="false">Xavfsiz ilovalar</string>
+    <string name="allowed_permissions" translatable="false">Berilgan ruxsatlar</string>
+    <string name="denied_permissions" translatable="false">Berilmagan ruxsatlar</string>
+    <string name="select_file">Fayl tanlash</string>
+    <string name="app_info">Ilova ma\'lumotlari</string>
+    <string name="app_icon">Ilova belgisi</string>
+    <string name="package_name">Paket nomi</string>
+    <string name="version">Versiya</string>
+    <string name="version_x">Versiya %1$s</string>
+    <string name="language">Til</string>
+    <string name="lang_uzbek">Uzbek</string>
+    <string name="lang_russian">Русский</string>
+    <string name="lang_english">English</string>
+    <string name="active_apps" translatable="false">Foal ilovalar</string>
+    <string name="noactive_apps">Ishlatilmagan ilovalar</string>
+    <string name="update_time">Yuklanish vaqti</string>
+    <string name="cpu">CPU</string>
+    <string name="b_files">Katta fayllar</string>
+    <string name="s_files" translatable="false">Shubhali fayllar</string>
+    <string name="y_files" translatable="false">Yashirin fayllar</string>
+    <string name="aniqlangan_zararli_fayllar">Aniqlangan zararli fayllar</string>
 </resources>

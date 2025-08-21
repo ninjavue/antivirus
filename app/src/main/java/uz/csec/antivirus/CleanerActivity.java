@@ -115,7 +115,7 @@ public class CleanerActivity extends AppCompatActivity {
         long total = bigFiles + audioVideo + apks + junk;
 
         itemSizes = new long[]{bigFiles, audioVideo, apks, junk};
-        itemLabels = new String[]{"Katta hajmli fayllar", "Audio & video", "Ilovalarni o'chirish", "Kesh xotira"};
+        itemLabels = new String[]{getString(R.string.big_files), getString(R.string.audio_and_video), getString(R.string.apps_delete), getString(R.string.cash_memory)};
         itemLayoutIds = new int[]{R.id.item1, R.id.item2, R.id.item3, R.id.item4};
         itemSelected = new boolean[]{false, false, false, false};
 
@@ -214,12 +214,12 @@ public class CleanerActivity extends AppCompatActivity {
         }
         
         if (hasSelection) {
-            tvCleanableDesc.setText("Tozalash");
+            tvCleanableDesc.setText(getString(R.string.cleaner));
             tvCleanableDesc.setTextColor(getResources().getColor(android.R.color.white));
             tvCleanableDesc.setBackgroundResource(R.drawable.btn_clean_bg);
             tvCleanableDesc.setClickable(true);
         } else {
-            tvCleanableDesc.setText("Tozalash");
+            tvCleanableDesc.setText(getString(R.string.cleaner));
             tvCleanableDesc.setTextColor(getResources().getColor(android.R.color.darker_gray));
             tvCleanableDesc.setBackgroundResource(android.R.color.transparent);
             tvCleanableDesc.setClickable(false);

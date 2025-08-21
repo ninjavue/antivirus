@@ -38,7 +38,6 @@ import android.provider.MediaStore;
 import android.content.ContentResolver;
 
 public class FileScanHelper {
-	// Notification deduplication: avoid spamming same message repeatedly
 	private static final long NOTIFICATION_DEDUP_WINDOW_MS = 60_000L; // 1 minute
 	private static final Map<String, Long> LAST_NOTIFICATION_TIME_BY_KEY = new ConcurrentHashMap<>();
     public static void handleNewFile(Context context, String filePath) {
@@ -48,7 +47,7 @@ public class FileScanHelper {
         if (filePath.contains("/Android/data/org.telegram.messenger/files/Telegram/Telegram Files/")) {
             sendNotification(context, "Telegramdan fayl yuklanmoqda", "Telegram: " + fileName);
         } else {
-            sendNotification(context, "Yangi fayl", "Yangi yuklangan fayl: " + fileName);
+            Log.d("FileScanHelper", "Yangi fayl: " + fileName);
         }
         
         boolean isApk = fileName.endsWith(".apk");
@@ -60,7 +59,6 @@ public class FileScanHelper {
             }
         }
         
-        // Fayl to'liq yozib bo'linganini kutish uchun kichik prob tekshiruv (hash hisoblashda EOF xatolarini kamaytirish)
         long lastLen = -1L;
         for (int i = 0; i < 3; i++) {
             long cur = file.length();
@@ -339,42 +337,36 @@ public class FileScanHelper {
             PackageManager pm = context.getPackageManager();
             ApplicationInfo appInfo = pm.getApplicationInfo(packageName, 0);
             
-            String installerPackageName = pm.getInstallerPackageName(packageName);
+            String installerPackageName = null;
+            try {
+                // Legacy API
+                installerPackageName = pm.getInstallerPackageName(packageName);
+            } catch (Throwable ignored) {}
 
-            // Play Store package names (different devices may use different ones)
-            String[] playStorePackages = {
-                "com.android.vending",  // Standard Google Play Store
-                "com.google.android.packageinstaller", // Google Package Installer
-                "com.android.packageinstaller", // Android Package Installer
-                "com.google.android.apps.nbu.files", // Google Files (some devices)
-                "com.miui.packageinstaller", // Xiaomi Package Installer
-                "com.samsung.android.packageinstaller", // Samsung Package Installer
-                "com.oneplus.packageinstaller", // OnePlus Package Installer
-                "com.huawei.packageinstaller", // Huawei Package Installer
-                "com.oppo.packageinstaller", // OPPO Package Installer
-                "com.vivo.packageinstaller" // VIVO Package Installer
-            };
+            // Prefer detailed source info on Android 11+
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.R) {
+                try {
+                    android.content.pm.InstallSourceInfo src = pm.getInstallSourceInfo(packageName);
+                    if (src != null) {
+                        String installing = src.getInstallingPackageName();
+                        String initiating = src.getInitiatingPackageName();
+                        String originating = src.getOriginatingPackageName();
+                        // Treat as Play Store only if any source equals Play Store app id
+                        boolean play = "com.android.vending".equals(installing)
+                                || "com.android.vending".equals(initiating)
+                                || "com.android.vending".equals(originating);
+                        if (play) return false; // From Play
+                    }
+                } catch (Throwable ignored) {}
+            }
 
-            // If no installer package name, it's likely not from Play Store
-            if (installerPackageName == null) {
-                Log.d("FileScanHelper", "Play Store dan o'rnatilmagan ilova (no installer): " + packageName);
+            // Fallback: only "com.android.vending" is considered Play Store
+            if (!"com.android.vending".equals(installerPackageName)) {
+                Log.d("FileScanHelper", "Play Store dan o'rnatilmagan ilova: " + packageName +
+                        " (installer: " + String.valueOf(installerPackageName) + ")");
                 return true;
             }
 
-            // Check if installer is from Play Store
-            boolean isFromPlayStore = false;
-            for (String playStorePackage : playStorePackages) {
-                if (installerPackageName.equals(playStorePackage)) {
-                    isFromPlayStore = true;
-                    break;
-                }
-            }
-
-            if (!isFromPlayStore) {
-                Log.d("FileScanHelper", "Play Store dan o'rnatilmagan ilova: " + packageName + " (installer: " + installerPackageName + ")");
-                return true;
-            }
-            
             return false;
         } catch (PackageManager.NameNotFoundException e) {
             Log.e("FileScanHelper", "Ilova topilmadi: " + packageName, e);
@@ -461,11 +453,11 @@ public class FileScanHelper {
     public static DangerInfo analyzeAppDanger(Context context, String packageName, String apkPath) {
         DangerInfo info = new DangerInfo();
         PackageManager pm = context.getPackageManager();
-        String installer = null;
-        try { installer = pm.getInstallerPackageName(packageName); } catch (Exception ignored) {}
-        if (installer == null || !installer.equals("com.android.vending")) {
-            info.reasons.add("Ilova Play Marketdan o'rnatilmagan (no Play Store)");
-        }
+        try {
+            if (isNonPlayStoreApp(context, packageName)) {
+                info.reasons.add("Ilova Play Marketdan o'rnatilmagan (no Play Store)");
+            }
+        } catch (Throwable ignored) {}
         Set<String> dangerous = getDangerousPermissionsFromApk(apkPath);
         if (!dangerous.isEmpty()) {
             info.reasons.add("Xavfli ruxsatlar so'ralgan: " + TextUtils.join(", ", dangerous));

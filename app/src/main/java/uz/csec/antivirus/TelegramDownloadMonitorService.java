@@ -31,6 +31,10 @@ public class TelegramDownloadMonitorService extends Service {
     private final List<ContentObserver> contentObservers = new ArrayList<>();
     private ScheduledExecutorService scheduler;
     private volatile long lastMediaStoreScanMs = 0L;
+    private boolean startedForeground = false;
+
+    private static final String CHANNEL_ID = "tg_monitor_channel";
+    private static final int NOTIFICATION_ID = 1001;
 
     private static final String[] TELEGRAM_DIRS = new String[] {
         "/Android/data/org.telegram.messenger/files/Telegram/Telegram Files",
@@ -64,20 +68,7 @@ public class TelegramDownloadMonitorService extends Service {
     @Override
     public void onCreate() {
         super.onCreate();
-        String channelId = "tg_monitor_channel";
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            NotificationChannel channel = new NotificationChannel(
-                channelId, "Telegram Monitor", NotificationManager.IMPORTANCE_LOW);
-            NotificationManager manager = getSystemService(NotificationManager.class);
-            manager.createNotificationChannel(channel);
-        }
-        Notification notification = new NotificationCompat.Builder(this, channelId)
-            .setContentTitle("Telegram fayllari kuzatilyapti")
-            .setSmallIcon(R.drawable.ic_antivirus)
-            .setOngoing(true)
-            .build();
-        startForeground(2025, notification);
-
+        startInForeground();
         scheduler = Executors.newSingleThreadScheduledExecutor();
 
         // Try multiple storage roots
@@ -141,10 +132,7 @@ public class TelegramDownloadMonitorService extends Service {
         }, 5, 10, TimeUnit.SECONDS);
         
         // Test notification to verify service is working
-        FileScanHelper.sendNotification(getApplicationContext(), "Telegram Monitor", "Servis ishga tushdi");
-
-        // Initial on-start scan of Telegram folders (both app-data and public Downloads/Telegram)
-        // Run asynchronously to avoid blocking main thread
+  
         scheduler.execute(() -> {
             try {
                 new FileObservation().observeTelegramFiles(getApplicationContext());
@@ -190,8 +178,6 @@ public class TelegramDownloadMonitorService extends Service {
                     String filePath = absPath + "/" + path;
                     Log.d("TGMonitorService", "New file detected: " + filePath);
                     
-                    // Notify immediately what file was detected
-                    FileScanHelper.sendNotification(getApplicationContext(), "Telegram yuklandi", path);
                     
                     scheduler.schedule(() -> {
                         try {
@@ -245,7 +231,6 @@ public class TelegramDownloadMonitorService extends Service {
                                 // Notify immediately what file was detected
                                 String folderName = subdir.getName();
                                 String notificationText = "Telegram " + folderName.replace("Telegram ", "") + ": " + path;
-                                FileScanHelper.sendNotification(getApplicationContext(), "Telegram yuklandi", notificationText);
                                 
                                 scheduler.schedule(() -> {
                                     try {
@@ -364,7 +349,6 @@ public class TelegramDownloadMonitorService extends Service {
                         
                         if (filePath != null && filePath.contains("Telegram")) {
                             Log.d("TGMonitorService", "Found new Telegram file via MediaStore: " + fileName + " at " + filePath);
-                            FileScanHelper.sendNotification(getApplicationContext(), "Telegram yuklandi", fileName);
                             
                             // Process the file
                             scheduler.schedule(() -> {
@@ -457,6 +441,7 @@ public class TelegramDownloadMonitorService extends Service {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
+        startInForeground();
         return START_STICKY;
     }
 
@@ -478,5 +463,30 @@ public class TelegramDownloadMonitorService extends Service {
     @Override
     public IBinder onBind(Intent intent) {
         return null;
+    }
+
+    private void startInForeground() {
+        if (startedForeground) return;
+        NotificationManager nm = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            NotificationChannel channel = new NotificationChannel(
+                    CHANNEL_ID,
+                    "Telegram kuzatuvchi",
+                    NotificationManager.IMPORTANCE_LOW
+            );
+            channel.setDescription("Telegram yuklamalarini kuzatish xabarnomasi");
+            if (nm != null) nm.createNotificationChannel(channel);
+        }
+
+        Notification notification = new NotificationCompat.Builder(this, CHANNEL_ID)
+                .setSmallIcon(R.drawable.ic_antivirus)
+                .setContentTitle("Telegram kuzatuvchi")
+                .setContentText("Yangi yuklamalar nazoratda")
+                .setOngoing(true)
+                .setPriority(NotificationCompat.PRIORITY_LOW)
+                .build();
+
+        startForeground(NOTIFICATION_ID, notification);
+        startedForeground = true;
     }
 }

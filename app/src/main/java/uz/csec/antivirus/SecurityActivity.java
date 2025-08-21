@@ -17,6 +17,8 @@ import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageInfo;
 import android.graphics.drawable.Drawable;
 
+import kotlin.io.LineReader;
+
 public class SecurityActivity extends AppCompatActivity {
     static {
         System.loadLibrary("antivirus");
@@ -43,7 +45,7 @@ public class SecurityActivity extends AppCompatActivity {
         safeAppsSection = findViewById(R.id.safe_apps_section);
         btnDangerousApps = findViewById(R.id.btn_dangerous_apps);
         btnSafeApps = findViewById(R.id.btn_safe_apps);
-        ImageButton btnBack = findViewById(R.id.btn_back);
+        LinearLayout btnBack = findViewById(R.id.security_header);
         TextView tv_security_title = findViewById(R.id.tv_security_title);
         btnBack.setOnClickListener(v -> finish());
         tv_security_title.setOnClickListener(v -> finish());

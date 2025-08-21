@@ -19,47 +19,28 @@ import java.io.InputStreamReader;
 
 public class FileObservation {
 
-    /**
-     * Checks common Telegram download locations and shows a notification for found files.
-     * - /Android/data/org.telegram.messenger/files/Telegram/Telegram Files
-     * - /Download/Telegram
-     * - MediaStore queries for Telegram files
-     * - Alternative storage paths
-     * - Root access attempts
-     * - Package manager queries
-     */
     public void observeTelegramFiles(Context context) {
-        // Method 1: Direct file access (may not work on newer Android)
         checkDirectFileAccess(context);
         
-        // Method 2: MediaStore queries (works on all Android versions)
         checkMediaStoreForTelegramFiles(context);
         
-        // Method 3: Multiple storage paths
         checkMultipleStoragePaths(context);
         
-        // Method 4: Package-specific paths
         checkPackageSpecificPaths(context);
         
-        // Method 5: Root access attempts
         checkWithRootAccess(context);
         
-        // Method 6: Alternative MediaStore queries
         checkAlternativeMediaStoreQueries(context);
         
-        // Method 7: File system scanning with different permissions
         checkFileSystemWithDifferentPermissions(context);
         
-        // Method 8: Package manager based detection
         checkPackageManagerBasedDetection(context);
     }
 
     private void checkDirectFileAccess(Context context) {
-        // Telegram app private external directory (not always accessible on newer Android versions)
         File appDataTelegram = new File(Environment.getExternalStorageDirectory(),
                 "Android/data/org.telegram.messenger/files/Telegram/Telegram Files");
 
-        // Public Downloads/Telegram folder
         File publicDownloadsTelegram = new File(
                 Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS),
                 "Telegram");
@@ -72,7 +53,6 @@ public class FileObservation {
         try {
             ContentResolver contentResolver = context.getContentResolver();
             
-            // Query for files in Telegram app data path
             Uri filesUri = MediaStore.Files.getContentUri("external");
             String[] projection = {
                 MediaStore.Files.FileColumns._ID,
@@ -82,7 +62,6 @@ public class FileObservation {
                 MediaStore.Files.FileColumns.DATE_ADDED
             };
             
-            // Look for files in Telegram app data directory
             String selection = MediaStore.Files.FileColumns.DATA + " LIKE ?";
             String[] selectionArgs = {"%/Android/data/org.telegram.messenger/files/Telegram/%"};
             
@@ -98,7 +77,6 @@ public class FileObservation {
                         
                         Log.d("FileObservation", "Telegram file via MediaStore: " + fileName + " at " + filePath + " size: " + fileSize);
                         
-                        // Check if file was added recently (last 10 minutes)
                         long now = System.currentTimeMillis() / 1000;
                         if (dateAdded > now - 600) {
                             notifyTelegramFile(context, new File(filePath));
@@ -107,7 +85,6 @@ public class FileObservation {
                 }
             }
             
-            // Also check Downloads for Telegram files
             Uri downloadsUri = null;
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
                 downloadsUri = MediaStore.Downloads.getContentUri(MediaStore.VOLUME_EXTERNAL);
@@ -134,7 +111,6 @@ public class FileObservation {
                         
                         Log.d("FileObservation", "Telegram file in Downloads: " + fileName + " at " + filePath);
                         
-                        // Check if file was added recently (last 10 minutes)
                         long now = System.currentTimeMillis() / 1000;
                         if (dateAdded > now - 600) {
                             notifyTelegramFile(context, new File(filePath));
@@ -185,7 +161,6 @@ public class FileObservation {
 
     private void checkPackageSpecificPaths(Context context) {
         try {
-            // Try to get Telegram app's external files directory
             String[] telegramPackages = {
                 "org.telegram.messenger",
                 "org.telegram.plus",
@@ -198,14 +173,12 @@ public class FileObservation {
                         .getApplicationInfo(packageName, 0);
                     
                     if (appInfo != null) {
-                        // Try to access the app's external files directory
                         File externalDir = new File(appInfo.dataDir + "/files/Telegram");
                         if (externalDir.exists() && externalDir.isDirectory()) {
                             Log.d("FileObservation", "Found Telegram external dir: " + externalDir.getAbsolutePath());
                             checkDirAndNotify(context, externalDir);
                         }
                         
-                        // Also try the standard external files directory
                         File standardExternalDir = new File(Environment.getExternalStorageDirectory() + 
                             "/Android/data/" + packageName + "/files/Telegram");
                         if (standardExternalDir.exists() && standardExternalDir.isDirectory()) {
@@ -214,7 +187,6 @@ public class FileObservation {
                         }
                     }
                 } catch (PackageManager.NameNotFoundException e) {
-                    // Package not installed, skip
                 } catch (Exception e) {
                     Log.e("FileObservation", "Error checking package " + packageName + ": " + e.getMessage(), e);
                 }
@@ -226,7 +198,6 @@ public class FileObservation {
 
     private void checkWithRootAccess(Context context) {
         try {
-            // Try to use root access to find Telegram files
             String[] rootCommands = {
                 "find /data/data/org.telegram.messenger/files/Telegram -type f -name '*' 2>/dev/null",
                 "find /storage/emulated/0/Android/data/org.telegram.messenger/files/Telegram -type f -name '*' 2>/dev/null",
@@ -242,7 +213,6 @@ public class FileObservation {
                     String line;
                     while ((line = reader.readLine()) != null) {
                         if (line.contains("/") && !line.startsWith("d")) {
-                            // This is a file path
                             String filePath = line.trim();
                             if (filePath.contains("Telegram") && new File(filePath).exists()) {
                                 Log.d("FileObservation", "Found Telegram file via root: " + filePath);
@@ -253,7 +223,6 @@ public class FileObservation {
                     reader.close();
                     process.waitFor();
                 } catch (Exception e) {
-                    // Root access not available or command failed
                     Log.d("FileObservation", "Root command failed: " + command + " - " + e.getMessage());
                 }
             }
@@ -266,15 +235,11 @@ public class FileObservation {
         try {
             ContentResolver contentResolver = context.getContentResolver();
             
-            // Try different MediaStore queries
             String[] queries = {
-                // Query for recent files that might be from Telegram
                 "SELECT _data, _display_name, date_added FROM files WHERE _data LIKE '%Telegram%' AND date_added > " + (System.currentTimeMillis() / 1000 - 3600),
                 
-                // Query for files in app data directories
                 "SELECT _data, _display_name, date_added FROM files WHERE _data LIKE '%/Android/data/org.telegram%' AND date_added > " + (System.currentTimeMillis() / 1000 - 3600),
                 
-                // Query for files with common Telegram extensions
                 "SELECT _data, _display_name, date_added FROM files WHERE _data LIKE '%.apk' AND _data LIKE '%Telegram%' AND date_added > " + (System.currentTimeMillis() / 1000 - 3600)
             };
             
@@ -301,7 +266,6 @@ public class FileObservation {
 
     private void checkFileSystemWithDifferentPermissions(Context context) {
         try {
-            // Try to access files with different permission approaches
             String[] alternativePaths = {
                 "/data/data/org.telegram.messenger/files/Telegram",
                 "/data/user/0/org.telegram.messenger/files/Telegram",
@@ -339,7 +303,6 @@ public class FileObservation {
                 if (appInfo.packageName.contains("telegram")) {
                     Log.d("FileObservation", "Found Telegram-related package: " + appInfo.packageName);
                     
-                    // Try to access the app's files directory
                     String[] possiblePaths = {
                         appInfo.dataDir + "/files/Telegram",
                         appInfo.dataDir + "/files/Telegram/Telegram Files",
@@ -388,8 +351,6 @@ public class FileObservation {
     private void notifyTelegramFile(Context context, File file) {
         String fileName = file.getName();
         Log.d("FileObservation", "Notifying about Telegram file: " + fileName + " at " + file.getAbsolutePath());
-        FileScanHelper.sendNotification(context, "Telegram yuklandi", fileName);
-        // Optionally trigger scan/handling logic
         FileScanHelper.handleNewFile(context, file.getAbsolutePath());
     }
 }

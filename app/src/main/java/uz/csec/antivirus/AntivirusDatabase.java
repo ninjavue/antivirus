@@ -19,7 +19,7 @@ public class AntivirusDatabase extends SQLiteOpenHelper {
                 "id INTEGER PRIMARY KEY AUTOINCREMENT, " +
                 "file_name TEXT, " +
                 "file_path TEXT, " +
-                "file_size INTEGER, " +
+                "file_size INTEGER," +
                 "detected_at TEXT, " +
                 "hash TEXT UNIQUE)";
         db.execSQL(CREATE_TABLE);

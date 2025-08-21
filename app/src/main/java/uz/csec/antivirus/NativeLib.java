@@ -32,11 +32,38 @@ public class NativeLib {
             java.util.List<android.app.ActivityManager.RunningAppProcessInfo> runningApps = am.getRunningAppProcesses();
             if (runningApps != null) {
                 for (android.app.ActivityManager.RunningAppProcessInfo proc : runningApps) {
-                    try {
-                        String label = pm.getApplicationLabel(pm.getApplicationInfo(proc.processName, 0)).toString();
-                        uniqueLabels.add(label);
-                    } catch (Exception e) {
-                        uniqueLabels.add(proc.processName);
+                    boolean addedAnyForProc = false;
+                    if (proc.pkgList != null) {
+                        for (String pkg : proc.pkgList) {
+                            try {
+                                android.content.pm.ApplicationInfo appInfo = pm.getApplicationInfo(pkg, 0);
+                                // Skip system and updated system apps
+                                if (isSystemOrUpdatedSystemApp(appInfo)) {
+                                    continue;
+                                }
+                                String label = pm.getApplicationLabel(appInfo).toString();
+                                if (shouldExcludeLabel(label)) {
+                                    continue;
+                                }
+                                uniqueLabels.add(label);
+                                addedAnyForProc = true;
+                            } catch (Exception ignored) {
+                            }
+                        }
+                    }
+                    if (!addedAnyForProc) {
+                        // Fallback: try by process name and still filter system if possible
+                        try {
+                            android.content.pm.ApplicationInfo appInfo = pm.getApplicationInfo(proc.processName, 0);
+                            if (!isSystemOrUpdatedSystemApp(appInfo)) {
+                                String label = pm.getApplicationLabel(appInfo).toString();
+                                if (!shouldExcludeLabel(label)) {
+                                    uniqueLabels.add(label);
+                                }
+                            }
+                        } catch (Exception ignored) {
+                            // If we cannot resolve to a package, skip to avoid showing system/internal processes
+                        }
                     }
                 }
             }
@@ -60,12 +87,14 @@ public class NativeLib {
             }
             for (android.content.pm.ApplicationInfo appInfo : allApps) {
                 // Faqat user ilovalarini ko'rsatamiz
-                if ((appInfo.flags & android.content.pm.ApplicationInfo.FLAG_SYSTEM) != 0) continue;
+                if (isSystemOrUpdatedSystemApp(appInfo)) continue;
                 long lastUsed = lastUsedMap.containsKey(appInfo.packageName) ? lastUsedMap.get(appInfo.packageName) : 0L;
                 if (lastUsed < now - 1000L * 60 * 60 * 24 * 15) {
                     try {
                         String label = pm.getApplicationLabel(appInfo).toString();
-                        unused.add(label);
+                        if (!shouldExcludeLabel(label)) {
+                            unused.add(label);
+                        }
                     } catch (Exception e) {
                         unused.add(appInfo.packageName);
                     }
@@ -74,6 +103,22 @@ public class NativeLib {
             return unused.isEmpty() ? "Bunday ilovalar mavjud emas" : android.text.TextUtils.join("\n", unused);
         }
         return "API past";
+    }
+
+    private static boolean isSystemOrUpdatedSystemApp(android.content.pm.ApplicationInfo appInfo) {
+        int flags = appInfo.flags;
+        return (flags & android.content.pm.ApplicationInfo.FLAG_SYSTEM) != 0
+                || (flags & android.content.pm.ApplicationInfo.FLAG_UPDATED_SYSTEM_APP) != 0;
+    }
+
+    private static boolean shouldExcludeLabel(String label) {
+        if (label == null) return false;
+        String lower = label.toLowerCase(java.util.Locale.ROOT);
+        // Exclude common system-like labels reported by users
+        if (lower.contains("android system")) return true;
+        if (lower.contains("key verifier")) return true;
+        if (lower.contains("safetycore") || lower.contains("safety core")) return true;
+        return false;
     }
 
     public static String getAppBatteryUsageJava(Context context) {

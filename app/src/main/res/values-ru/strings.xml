@@ -1,0 +1,45 @@
+<resources>
+    <string name="settings">Настройки</string>
+    <string name="app_info">Информация о приложении</string>
+    <string name="app_icon">Значок приложения</string>
+    <string name="package_name">Имя пакета</string>
+    <string name="version">Версия</string>
+    <string name="version_x">Версия %1$s</string>
+    <string name="language">Язык</string>
+    <string name="lang_uzbek">Узбек</string>
+    <string name="lang_russian">Рус</string>
+    <string name="lang_english">Английский</string>
+    <string name="cleaner">Очистить</string>
+    <string name="battery">Батарея</string>
+    <string name="data">Дата</string>
+    <string name="antivirus">Антивирус</string>
+    <string name="security">Безопасность</string>
+    <string name="files">Файлы</string>
+    <string name="optimize_text">Оптимизация\nпредлагается</string>
+    <string name="select_file">Выбрать файл</string>
+    <string name="check">Проверить</string>
+    <string name="checking">Система проверяется</string>
+    <string name="device_virus_programm">Вирусы и угрозы на устройстве</string>
+    <string name="device_update">Обновление приложения</string>
+    <string name="phone_safe">Телефон защищён</string>
+    <string name="phone_unsafe">Обнаружены вредоносные программы</string>
+    <string name="scannery">сканирования выполнено</string>
+    <string name="big_files">Крупные файлы</string>
+    <string name="audio_and_video">Аудио и видео</string>
+    <string name="apps_delete">Удаление приложений</string>
+    <string name="cash_memory">Кэш-память</string>
+    <string name="unsafe_apps">Опасные приложения</string>
+    <string name="safe_apps">Безопасные приложения</string>
+    <string name="allowed_permissions">Разрешения</string>
+    <string name="denied_permissions">Отсутствующие разрешения</string>
+    <string name="active_apps">Активные приложения</string>
+    <string name="noactive_apps">Не используемые</string>
+    <string name="update_time">Время загрузки</string>
+    <string name="cpu">CPU</string>
+    <string name="b_files">Большие файлы</string>
+    <string name="s_files">Подозрительные файлы</string>
+    <string name="y_files">Скрытые файлы</string>
+    <string name="aniqlangan_zararli_fayllar">Aniqlangan zararli fayllar</string>
+
+</resources>
+

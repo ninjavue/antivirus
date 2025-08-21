@@ -50,7 +50,7 @@ public class ScanProgressView extends View {
 
         dotsPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
         dotsPaint.setStyle(Paint.Style.FILL);
-        dotsPaint.setColor(0xFF3B82F6);
+        dotsPaint.setColor(0xFFFFFFFF);
         // Dots sizes
         dotRadiusLarge = dp(3);
         dotRadiusSmall = dp(5);

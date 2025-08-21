@@ -1,0 +1,44 @@
+<resources>
+    <string name="settings">Settings</string>
+    <string name="app_info">App info</string>
+    <string name="app_icon">App icon</string>
+    <string name="package_name">Package name</string>
+    <string name="version">Version</string>
+    <string name="version_x">Version %1$s</string>
+    <string name="language">Language</string>
+    <string name="lang_uzbek">Uzbek</string>
+    <string name="lang_russian">Russian</string>
+    <string name="lang_english">English</string>
+    <string name="cleaner">Cleaner</string>
+    <string name="battery">Battery</string>
+    <string name="data">Data</string>
+    <string name="antivirus">Antivirus</string>
+    <string name="security">Security</string>
+    <string name="files">Files</string>
+    <string name="optimize_text">Optimization\nsuggested</string>
+    <string name="select_file">Select File</string>
+    <string name="check">Check</string>
+    <string name="checking">Checking</string>
+    <string name="device_virus_programm">Malware on the device</string>
+    <string name="device_update">Software update</string>
+    <string name="phone_safe">Your phone is safe</string>
+    <string name="phone_unsafe">Malware detected on the device</string>
+    <string name="scannery">scan completed</string>
+    <string name="big_files">Big files</string>
+    <string name="audio_and_video" translatable="false">Audio &amp; video</string>
+    <string name="apps_delete">Delete apps</string>
+    <string name="cash_memory">Cache memory</string>
+    <string name="unsafe_apps">Dangerous apps</string>
+    <string name="safe_apps">Safe apps</string>
+    <string name="allowed_permissions">Allowed permissions</string>
+    <string name="denied_permissions">Denied permissions</string>
+    <string name="active_apps">Active Apps</string>
+    <string name="noactive_apps">Inactive apps</string>
+    <string name="update_time">Load time</string>
+    <string name="cpu">CPU</string>
+    <string name="b_files">Big files</string>
+    <string name="s_files">Suspicious files</string>
+    <string name="y_files">Hidden files</string>
+    <string name="aniqlangan_zararli_fayllar">Aniqlangan zararli fayllar</string>
+</resources>
+

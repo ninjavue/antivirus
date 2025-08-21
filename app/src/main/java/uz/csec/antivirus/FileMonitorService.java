@@ -72,7 +72,6 @@ public class FileMonitorService extends Service {
                                     return;
                                 }
 
-                                // O'lcham barqarorlashishini kutish (3 marotaba tekshiruv)
                                 long previous = -1L;
                                 for (int i = 0; i < 3; i++) {
                                     long current = file.length();

@@ -21,6 +21,7 @@ public class FileListFragment extends Fragment {
     private RecyclerView recyclerView;
     private FileAdapter adapter;
     private TextView tvEmpty;
+    private FileAdapter.OnFileScanListener pendingScanListener;
     
     public static FileListFragment newInstance(String fileType, String jsonData) {
         FileListFragment fragment = new FileListFragment();
@@ -51,6 +52,11 @@ public class FileListFragment extends Fragment {
         recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
         adapter = new FileAdapter();
         recyclerView.setAdapter(adapter);
+
+        // Apply any listener that may have been set before adapter was created
+        if (pendingScanListener != null) {
+            adapter.setOnFileScanListener(pendingScanListener);
+        }
         
         if (jsonData != null) {
             adapter.setFiles(jsonData);
@@ -72,6 +78,7 @@ public class FileListFragment extends Fragment {
         if (adapter.getItemCount() == 0) {
             recyclerView.setVisibility(View.GONE);
             tvEmpty.setVisibility(View.VISIBLE);
+            tvEmpty.setTextColor(getResources().getColor(R.color.antivirus_text));
             
             switch (fileType) {
                 case "large":
@@ -88,12 +95,14 @@ public class FileListFragment extends Fragment {
                     break;
             }
         } else {
+            
             recyclerView.setVisibility(View.VISIBLE);
             tvEmpty.setVisibility(View.GONE);
         }
     }
     
     public void setOnFileScanListener(FileAdapter.OnFileScanListener listener) {
+        pendingScanListener = listener;
         if (adapter != null) {
             adapter.setOnFileScanListener(listener);
         }

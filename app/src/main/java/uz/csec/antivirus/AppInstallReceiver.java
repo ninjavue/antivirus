@@ -15,7 +15,6 @@ public class AppInstallReceiver extends BroadcastReceiver {
             try {
                 ApplicationInfo info = context.getPackageManager().getApplicationInfo(packageName, 0);
                 String apkPath = info.sourceDir;
-                // Scan the installed app in background to avoid blocking the broadcast
                 new Thread(() -> {
                     try {
                         FileScanHelper.scanAndHandleApp(context.getApplicationContext(), packageName, apkPath);

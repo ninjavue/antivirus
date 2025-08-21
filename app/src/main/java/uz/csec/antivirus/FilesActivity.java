@@ -15,16 +15,18 @@ import android.content.Intent;
 import android.provider.Settings;
 import android.app.AlertDialog;
 import android.net.Uri;
+import android.os.Handler;
+import android.os.Looper;
+import android.os.SystemClock;
 
 import androidx.activity.EdgeToEdge;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.annotation.NonNull;
 import androidx.core.content.ContextCompat;
+import androidx.core.view.WindowInsetsControllerCompat;
 import androidx.viewpager2.widget.ViewPager2;
-
-import com.google.android.material.tabs.TabLayout;
-import com.google.android.material.tabs.TabLayoutMediator;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -38,12 +40,13 @@ public class FilesActivity extends AppCompatActivity {
     private NativeLib nativeLib;
     private FilePagerAdapter pagerAdapter;
     private ViewPager2 viewPager;
-    private TabLayout tabLayout;
     private ProgressBar progressBar;
-    private Button scanButton;
+    private TextView scanStatus;
     private ImageButton btnRefresh;
     private TextView tvLargeFiles, tvSuspiciousFiles, tvHiddenFiles;
     private ExecutorService executor;
+    private View indicatorLarge, indicatorSuspicious, indicatorHidden;
+    private int scanSequence = 0;
     
     private static final String[] TAB_TITLES = {"Katta fayllar", "Shubhali fayllar", "Yashirin fayllar"};
     
@@ -67,6 +70,9 @@ public class FilesActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         EdgeToEdge.enable(this);
+        WindowInsetsControllerCompat insetsController =
+                new WindowInsetsControllerCompat(getWindow(), getWindow().getDecorView());
+        insetsController.setAppearanceLightStatusBars(true);
         setContentView(R.layout.activity_files);
         
         initViews();
@@ -125,36 +131,46 @@ public class FilesActivity extends AppCompatActivity {
     
     private void initViews() {
         viewPager = findViewById(R.id.viewPager);
-        tabLayout = findViewById(R.id.tabLayout);
         progressBar = findViewById(R.id.progressBar);
-        scanButton = findViewById(R.id.scanButton);
+        scanStatus = findViewById(R.id.scanStatus);
         tvLargeFiles = findViewById(R.id.tvLargeFiles);
         tvSuspiciousFiles = findViewById(R.id.tvSuspiciousFiles);
         tvHiddenFiles = findViewById(R.id.tvHiddenFiles);
+        indicatorLarge = findViewById(R.id.indicatorLarge);
+        indicatorSuspicious = findViewById(R.id.indicatorSuspicious);
+        indicatorHidden = findViewById(R.id.indicatorHidden);
+        findViewById(R.id.cardLargeFiles).setOnClickListener(v -> viewPager.setCurrentItem(0, true));
+        findViewById(R.id.cardSuspiciousFiles).setOnClickListener(v -> viewPager.setCurrentItem(1, true));
+        findViewById(R.id.cardHiddenFiles).setOnClickListener(v -> viewPager.setCurrentItem(2, true));
+
     }
     
     private void setupListeners() {
-        findViewById(R.id.btnBack).setOnClickListener(v -> finish());
+        findViewById(R.id.header).setOnClickListener(v -> finish());
 
-        
-        scanButton.setOnClickListener(v -> {
-            scanButton.setEnabled(false);
-            scanButton.setText("Tekshirilmoqda...");
-            checkPermissionsAndScan();
-        });
+        if (scanStatus != null) {
+            scanStatus.setText("Faylni tekshirish uchun ustiga bosing");
+        }
     }
     
     private void setupViewPager() {
         pagerAdapter = new FilePagerAdapter(this);
         viewPager.setAdapter(pagerAdapter);
-        
-        new TabLayoutMediator(tabLayout, viewPager, (tab, position) -> {
-            tab.setText(TAB_TITLES[position]);
-        }).attach();
+        viewPager.registerOnPageChangeCallback(new ViewPager2.OnPageChangeCallback() {
+            @Override
+            public void onPageSelected(int position) {
+                super.onPageSelected(position);
+                updateIndicators(position);
+            }
+        });
+
+        // Default state
+        updateIndicators(0);
     }
     
     private void scanFiles() {
         showLoading(true);
+        setStatus("Fayllar skanerlanyapti...");
 
         executor.execute(() -> {
             try {
@@ -176,7 +192,7 @@ public class FilesActivity extends AppCompatActivity {
             } catch (Exception e) {
                 e.printStackTrace();
                 runOnUiThread(() -> {
-                    Toast.makeText(this, "Xatolik yuz berdi: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                    setStatus("Xatolik yuz berdi: " + e.getMessage());
                     showLoading(false);
                 });
             }
@@ -197,20 +213,19 @@ public class FilesActivity extends AppCompatActivity {
             e.printStackTrace();
         }
         
-        for (int i = 0; i < 3; i++) {
-            FileListFragment fragment = (FileListFragment) getSupportFragmentManager()
-                    .findFragmentByTag("f" + pagerAdapter.getItemId(i));
-            if (fragment != null) {
-                fragment.setOnFileScanListener(this::scanIndividualFile);
-            }
+        // Ensure current fragment receives the listener immediately
+        androidx.fragment.app.Fragment current = getSupportFragmentManager().findFragmentByTag("f" + viewPager.getCurrentItem());
+        if (current instanceof FileListFragment) {
+            ((FileListFragment) current).setOnFileScanListener(this::scanIndividualFile);
         }
         
-        scanButton.setEnabled(true);
-        scanButton.setText("Fayllarni tekshirish");
+        setStatus("Faylni tekshirish uchun ustiga bosing.");
     }
     
     private void scanIndividualFile(FileAdapter.FileItem file) {
-        Toast.makeText(this, "Fayl tekshirilmoqda: " + file.name, Toast.LENGTH_SHORT).show();
+        final long startMs = SystemClock.uptimeMillis();
+        final int localSeq = ++scanSequence;
+        setStatus("Fayl tekshirilmoqda: " + file.name);
         
         executor.execute(() -> {
             try {
@@ -222,15 +237,27 @@ public class FilesActivity extends AppCompatActivity {
                     if (result.optBoolean("suspicious", false)) {
                         message = "Shubhali fayl: " + file.name + "\nSababi: " + result.optString("reason", "");
                     } else {
-                        message = "Xavfsiz fayl: " + file.name;
+                        message = "Fayl xavfsiz: " + file.name;
                     }
-                    Toast.makeText(this, message, Toast.LENGTH_LONG).show();
+                    long elapsed = SystemClock.uptimeMillis() - startMs;
+                    long delay = Math.max(0, 1000 - elapsed);
+                    new Handler(Looper.getMainLooper()).postDelayed(() -> {
+                        if (localSeq == scanSequence) {
+                            setStatus(message);
+                        }
+                    }, delay);
                 });
                 
             } catch (Exception e) {
                 e.printStackTrace();
                 runOnUiThread(() -> {
-                    Toast.makeText(this, "Fayl tekshirishda xatolik", Toast.LENGTH_SHORT).show();
+                    long elapsed = SystemClock.uptimeMillis() - startMs;
+                    long delay = Math.max(0, 1000 - elapsed);
+                    new Handler(Looper.getMainLooper()).postDelayed(() -> {
+                        if (localSeq == scanSequence) {
+                            setStatus("Fayl tekshirishda xatolik");
+                        }
+                    }, delay);
                 });
             }
         });
@@ -238,7 +265,27 @@ public class FilesActivity extends AppCompatActivity {
     
     private void showLoading(boolean show) {
         progressBar.setVisibility(show ? View.VISIBLE : View.GONE);
-        scanButton.setEnabled(!show);
+    }
+
+    private void setStatus(String text) {
+        if (scanStatus != null) {
+            scanStatus.setText(text);
+        }
+    }
+
+    private void updateIndicators(int position) {
+        if (indicatorLarge == null) return;
+        indicatorLarge.setVisibility(position == 0 ? View.VISIBLE : View.GONE);
+        indicatorSuspicious.setVisibility(position == 1 ? View.VISIBLE : View.GONE);
+        indicatorHidden.setVisibility(position == 2 ? View.VISIBLE : View.GONE);
+    }
+    
+    @Override
+    public void onAttachFragment(@NonNull androidx.fragment.app.Fragment fragment) {
+        super.onAttachFragment(fragment);
+        if (fragment instanceof FileListFragment) {
+            ((FileListFragment) fragment).setOnFileScanListener(this::scanIndividualFile);
+        }
     }
     
     @Override

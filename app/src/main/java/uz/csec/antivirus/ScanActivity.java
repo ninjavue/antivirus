@@ -12,6 +12,7 @@ import android.os.Handler;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.content.Intent;
 import android.widget.Toast;
@@ -211,14 +212,10 @@ public class ScanActivity extends AppCompatActivity {
         ScanProgressView progressView = findViewById(R.id.scanProgressView);
         Button btnQuickScan = findViewById(R.id.btnQuickScan);
         TextView tvScanStatus = findViewById(R.id.tvScanStatus);
-        ImageView btnBack = findViewById(R.id.btnBack);
-        TextView tvTitle = findViewById(R.id.tvTitle);
+        LinearLayout btnBack = findViewById(R.id.back);
         NativeLib nativeLib = new NativeLib();
-        LottieAnimationView lottieScan = findViewById(R.id.lottieScan);
+        ImageView lottieScan = findViewById(R.id.lottieScan);
         lottieScan.setVisibility(View.VISIBLE);
-        lottieScan.setAnimation("success.json");
-        lottieScan.setRepeatCount(0);
-        lottieScan.playAnimation();
 
         View.OnClickListener backListener = new View.OnClickListener() {
             @Override
@@ -231,7 +228,6 @@ public class ScanActivity extends AppCompatActivity {
             }
         };
         btnBack.setOnClickListener(backListener);
-        tvTitle.setOnClickListener(backListener);
 
 
         CardView cardFullScan = findViewById(R.id.cardFullScan);
@@ -251,23 +247,19 @@ public class ScanActivity extends AppCompatActivity {
         int virusCount = db.getVirusCount();
         if (virusCount > 0) {
             progressView.setProgressColor(android.graphics.Color.parseColor("#F44336"));
-            tvScanStatus.setText("Zararli fayl(lar) mavjud");
+            tvScanStatus.setText(getString(R.string.phone_unsafe));
         } else {
             progressView.setProgressColor(android.graphics.Color.parseColor("#4CAF50"));
-            tvScanStatus.setText("Telefoningiz xavfsiz holatda");
+            tvScanStatus.setText(getString(R.string.phone_safe));
         }
 
         btnQuickScan.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 btnQuickScan.setEnabled(false);
-                btnQuickScan.setText("Tekshirilmoqda...");
+                btnQuickScan.setText(getString(R.string.checking)+ "...");
                 progressView.animateProgress(0f);
-                tvScanStatus.setText("0% skanerlandi");
-                lottieScan.setVisibility(View.VISIBLE);
-                lottieScan.setAnimation("scan.json");
-                lottieScan.setRepeatCount(LottieDrawable.INFINITE);
-                lottieScan.playAnimation();
+                tvScanStatus.setText("0% " + getString(R.string.scannery));
 
                 new Thread(() -> {
                     String rootPath = "/storage/emulated/0";
@@ -302,7 +294,7 @@ public class ScanActivity extends AppCompatActivity {
                             int color = getProgressColorByVirusCount(virusArr.length());
                             runOnUiThread(() -> {
                                 int percent = Math.round(Math.min(progress, 1f) * 100);
-                                tvScanStatus.setText(percent + "% skanerlandi");
+                                tvScanStatus.setText(percent + "% " + getString(R.string.scannery));
                                 progressView.animateProgress(Math.min(progress, 1f));
                                 progressView.setProgressColor(color);
                             });
@@ -316,7 +308,7 @@ public class ScanActivity extends AppCompatActivity {
 
                     runOnUiThread(() -> {
                         btnQuickScan.setEnabled(true);
-                        btnQuickScan.setText("Tekshirish");
+                        btnQuickScan.setText(getString(R.string.check));
                         progressView.animateProgress(1f);
                         int finalColor;
                         if (virusArr.length() > 0) {
@@ -344,14 +336,9 @@ public class ScanActivity extends AppCompatActivity {
                                 } catch (Exception ignored) {}
                             }
                             tvScanStatus.setText("Zararli dastur aniqlandi");
-                            lottieScan.setAnimation("found_virus.json");
-                            lottieScan.setRepeatCount(LottieDrawable.INFINITE);
-                            lottieScan.playAnimation();
                         } else {
                             tvScanStatus.setText("Qurulmada zararli dastur aniqlanmadi");
-                            lottieScan.setAnimation("success.json");
-                            lottieScan.setRepeatCount(0);
-                            lottieScan.playAnimation();
+
                         }
                     });
                 }).start();

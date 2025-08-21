@@ -36,18 +36,17 @@
                     android:layout_height="wrap_content"
                     android:orientation="horizontal"
                     android:gravity="center_vertical"
-                    android:paddingTop="10dp"
-                    android:background="@android:color/transparent">
+                    android:padding="6dp"
+                    android:background="?android:attr/selectableItemBackgroundBorderless">
 
                     <ImageButton
                         android:id="@+id/btn_back"
                         android:layout_width="40dp"
                         android:layout_height="40dp"
-                        android:background="?attr/selectableItemBackgroundBorderless"
                         android:src="@drawable/ic_back_arrow"
-                        android:layout_marginLeft="10dp"
                         android:scaleType="center"
                         android:elevation="4dp"
+                        android:background="@android:color/transparent"
                         app:tint="@color/antivirus_text" />
 
                     <TextView
@@ -55,7 +54,7 @@
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:text="Xavfsizlik"
+                        android:text="@string/security"
                         android:textSize="18sp"
                         android:textStyle="bold"
                         android:layout_marginLeft="-6dp"
@@ -75,22 +74,24 @@
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:text="Xavfli ilovalar"
+                        android:text="@string/unsafe_apps"
                         android:textColor="@color/antivirus_text"
                         android:background="@drawable/bg_security_btn"
                         android:layout_marginEnd="8dp"
-                        android:padding="12dp"/>
+                        android:paddingVertical="4dp"
+                        android:paddingHorizontal="12dp"/>
 
                     <Button
                         android:id="@+id/btn_safe_apps"
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:text="Xavfsiz ilovalar"
+                        android:text="@string/safe_apps"
                         android:textColor="@color/antivirus_text"
                         android:background="@drawable/bg_security_btn"
                         android:layout_marginStart="8dp"
-                        android:padding="12dp"/>
+                        android:paddingVertical="4dp"
+                        android:paddingHorizontal="12dp"/>
                 </LinearLayout>
 
             </LinearLayout>

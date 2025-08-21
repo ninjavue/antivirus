@@ -1,14 +1,17 @@
 package uz.csec.antivirus;
 
+import android.annotation.SuppressLint;
 import android.os.Build;
 import android.os.Bundle;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
+import androidx.core.view.WindowInsetsControllerCompat;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 import java.util.ArrayList;
 import java.util.List;
@@ -25,12 +28,15 @@ public class VirusActivity extends AppCompatActivity {
             window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
             window.setStatusBarColor(ContextCompat.getColor(this, R.color.virus_status_bar));
         }
+        WindowInsetsControllerCompat insetsController =
+                new WindowInsetsControllerCompat(getWindow(), getWindow().getDecorView());
+        insetsController.setAppearanceLightStatusBars(true);
 
 
         RecyclerView rvVirusTable = findViewById(R.id.rvVirusTable);
         rvVirusTable.setLayoutManager(new LinearLayoutManager(this));
         showVirusTable();
-        ImageView btnBack = findViewById(R.id.btnBackVirus);
+        @SuppressLint({"MissingInflatedId", "LocalSuppress"}) LinearLayout btnBack = findViewById(R.id.backBtnContainer);
         btnBack.setOnClickListener(v -> {
             finish();
             overridePendingTransition(0, 0);

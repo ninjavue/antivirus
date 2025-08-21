@@ -134,11 +134,13 @@ public class FileAdapter extends RecyclerView.Adapter<FileAdapter.FileViewHolder
             holder.tvSuspicious.setVisibility(View.GONE);
         }
         
-        holder.btnScan.setOnClickListener(v -> {
+        View.OnClickListener click = v -> {
             if (scanListener != null) {
                 scanListener.onFileScan(file);
             }
-        });
+        };
+        holder.btnScan.setOnClickListener(click);
+        holder.itemView.setOnClickListener(click);
     }
     
     @Override

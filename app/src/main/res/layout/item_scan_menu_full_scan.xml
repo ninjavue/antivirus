@@ -32,7 +32,7 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="Qurulmadagi zararli dasturlar"
+            android:text="@string/device_virus_programm"
             android:textColor="@color/antivirus_text"
             android:textSize="18sp"
             android:paddingStart="16dp" />
