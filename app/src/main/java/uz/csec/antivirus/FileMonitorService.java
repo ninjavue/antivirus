@@ -24,9 +24,11 @@ import java.util.concurrent.TimeUnit;
 
 public class FileMonitorService extends Service {
     private final List<FileObserver> observers = new ArrayList<>();
+    @SuppressLint("SdCardPath")
     private static final String[] MONITOR_DIRS = new String[] {
         "/Download",
-        "/Android/data/org.telegram.messenger/files/Telegram/Telegram Files"
+        "/Android/data/org.telegram.messenger/files/Telegram/Telegram Files",
+        "/sdcard/Telegram/Telegram Files"
     };
     private ScheduledExecutorService scheduler;
     private final Set<String> scannedApks = new HashSet<>();

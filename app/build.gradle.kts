@@ -49,10 +49,10 @@ dependencies {
     implementation(libs.viewpager2)
     implementation("com.airbnb.android:lottie:6.0.0")
     implementation("com.squareup.okhttp3:okhttp:4.9.3")
-    
+    implementation(fileTree(mapOf("dir" to "libs", "include" to listOf("*.jar"))))
     // Ensure Material Design is properly included
     implementation("com.google.android.material:material:1.12.0")
-    
+    implementation("com.journeyapps:zxing-android-embedded:4.3.0")
     // CameraX dependencies
     implementation("androidx.camera:camera-core:1.3.1")
     implementation("androidx.camera:camera-camera2:1.3.1")

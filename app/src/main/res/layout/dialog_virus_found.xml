@@ -1,14 +1,17 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:orientation="vertical" android:padding="24dp"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:orientation="vertical"
+    android:padding="24dp"
     android:background="@drawable/bg_dialog_rounded"
-    android:layout_width="match_parent" android:layout_height="wrap_content">
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content">
 
     <ImageView
         android:src="@drawable/ic_antivirus"
         android:layout_width="48dp"
         android:layout_height="48dp"
         android:layout_gravity="center"
-        android:tint="@color/error" />
+        app:tint="@color/error" />
 
     <TextView
         android:id="@+id/tvVirusTitle"
@@ -26,6 +29,7 @@
         android:text="Fayl: ..."
         android:textSize="16sp"
         android:layout_marginTop="8dp"
+        android:textColor="@color/antivirus_text"
         android:layout_width="match_parent"
         android:layout_height="wrap_content" />
 
@@ -33,6 +37,7 @@
         android:id="@+id/tvVirusPath"
         android:text="Path: ..."
         android:textSize="14sp"
+        android:textColor="@color/arrow_color"
         android:layout_marginTop="4dp"
         android:layout_width="match_parent"
         android:layout_height="wrap_content" />

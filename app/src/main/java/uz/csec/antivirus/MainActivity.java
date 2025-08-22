@@ -126,9 +126,7 @@ public class MainActivity extends BaseActivity {
         Button btnOptimize = findViewById(R.id.btnOptimize);
         
         // Set text for progress view
-        progressView.setMainText("89");
-        progressView.setSubtitleText(getString(R.string.optimize_text));
-        
+
         new Handler().postDelayed(() -> progressView.animateProgress(0.89f), 400);
         btnOptimize.setScaleX(0f);
         

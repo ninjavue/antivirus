@@ -84,6 +84,7 @@
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:text="@string/app_info"
+                                android:textColor="@color/antivirus_text"
                                 android:textAppearance="@style/TextAppearance.Material3.TitleMedium" />
 
                             <LinearLayout
@@ -111,6 +112,7 @@
                                         android:id="@+id/text_app_name"
                                         android:layout_width="wrap_content"
                                         android:layout_height="wrap_content"
+                                        android:textColor="@color/antivirus_text"
                                         android:textAppearance="@style/TextAppearance.Material3.TitleMedium"
                                         tools:text="Antivirus" />
 
@@ -118,6 +120,7 @@
                                         android:id="@+id/text_package_name"
                                         android:layout_width="wrap_content"
                                         android:layout_height="wrap_content"
+                                        android:textColor="@color/arrow_color"
                                         android:textAppearance="@style/TextAppearance.Material3.BodyMedium"
                                         tools:text="uz.csec.antivirus" />
 
@@ -125,6 +128,7 @@
                                         android:id="@+id/text_version"
                                         android:layout_width="wrap_content"
                                         android:layout_height="wrap_content"
+                                        android:textColor="@color/arrow_color"
                                         android:textAppearance="@style/TextAppearance.Material3.BodyMedium"
                                         tools:text="Version 1.0" />
                                 </LinearLayout>
