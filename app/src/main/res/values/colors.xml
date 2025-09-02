@@ -19,4 +19,7 @@
 
     <color name="bottom_nav_selected">#1b58b1</color>
     <color name="bottom_nav_unselected">#A8A5A5</color>
+    <color name="green">#4CAF50</color>
+    <color name="orange">#FF9800</color>
+    <color name="deep_orange">#FF7043</color>
 </resources>

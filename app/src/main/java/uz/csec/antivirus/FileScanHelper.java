@@ -2,7 +2,9 @@ package uz.csec.antivirus;
 
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.content.Context;
+import android.content.Intent;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.os.Build;
@@ -24,7 +26,6 @@ import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
 import android.util.Log;
-import android.content.Intent;
 import android.net.Uri;
 import android.provider.Settings;
 import android.content.pm.ApplicationInfo;
@@ -39,14 +40,13 @@ import android.content.ContentResolver;
 import android.database.Cursor;
 import java.io.StringWriter;
 import java.io.PrintWriter;
-import android.content.res.AXMLResource; // Import the AXMLPrinter library
+import android.content.res.AXMLResource;
 import java.util.HashMap;
 
 public class FileScanHelper {
-    private static final long NOTIFICATION_DEDUP_WINDOW_MS = 60_000L; // 1 minute
+    private static final long NOTIFICATION_DEDUP_WINDOW_MS = 60_000L;
     private static final Map<String, Long> LAST_NOTIFICATION_TIME_BY_KEY = new ConcurrentHashMap<>();
 
-    // Xavfli permissionlar va ularning o'zbekcha tavsiflari
     private static final HashMap<String, String> PERMISSION_DESCRIPTIONS = new HashMap<>();
     static {
         PERMISSION_DESCRIPTIONS.put("android.permission.SYSTEM_ALERT_WINDOW", "Tizim ustida oynalar ochishga ruxsati bor (ekran ustida ko'rsatish)");
@@ -91,10 +91,8 @@ public class FileScanHelper {
         PERMISSION_DESCRIPTIONS.put("android.permission.MASTER_CLEAR", "Qurilmani tozalashga (factory reset) ruxsati bor");
     }
 
-    // Xavflilik darajalari
     private static final HashMap<String, String> PERMISSION_DANGER_LEVELS = new HashMap<>();
     static {
-        // Yuqori xavf
         PERMISSION_DANGER_LEVELS.put("android.permission.SYSTEM_ALERT_WINDOW", "Yuqori xavf: Bu ruxsat viruslar tomonidan ekran ustida yolg'on oynalar ochish uchun ishlatiladi.");
         PERMISSION_DANGER_LEVELS.put("android.permission.ACCESSIBILITY_SERVICE", "Yuqori xavf: Ekranni to'liq boshqarish va ma'lumotlarni o'g'irlash imkonini beradi.");
         PERMISSION_DANGER_LEVELS.put("android.permission.BIND_ACCESSIBILITY_SERVICE", "Yuqori xavf: Qulaylik xizmatlarini virus sifatida ishlatishga imkon beradi.");
@@ -136,8 +134,6 @@ public class FileScanHelper {
         PERMISSION_DANGER_LEVELS.put("android.permission.BIND_DEVICE_ADMIN", "Yuqori xavf: Qurilma admini bo'lib, qurilmani bloklashi yoki ma'lumotlarni o'chirishi mumkin.");
         PERMISSION_DANGER_LEVELS.put("android.permission.MASTER_CLEAR", "Yuqori xavf: Qurilmani factory reset qilishi mumkin.");
     }
-
-    // Virusga xos permissionlar (fon rejimi, notification o'qish va boshqalar)
     private static final Set<String> VIRUS_LIKE_PERMISSIONS = new HashSet<>();
     static {
         VIRUS_LIKE_PERMISSIONS.add("android.permission.WAKE_LOCK");
@@ -147,14 +143,11 @@ public class FileScanHelper {
         VIRUS_LIKE_PERMISSIONS.add("android.permission.SYSTEM_ALERT_WINDOW");
         VIRUS_LIKE_PERMISSIONS.add("android.permission.ACCESSIBILITY_SERVICE");
         VIRUS_LIKE_PERMISSIONS.add("android.permission.BIND_ACCESSIBILITY_SERVICE");
-        // Qo'shimcha virusga xos ruxsatlarni qo'shishingiz mumkin
     }
 
     public static void handleNewFile(Context context, String filePath) {
         File file = new File(filePath);
         String fileName = file.getName().toLowerCase();
-
-        Log.d("FileScanHelper", "Processing file: " + filePath + ", exists=" + file.exists() + ", writable=" + file.canWrite());
 
         if (filePath.contains("/sdcard/Telegram/Telegram Files/")) {
             sendNotification(context, "Telegramdan fayl yuklanmoqda", "Telegram: " + fileName);
@@ -162,15 +155,10 @@ public class FileScanHelper {
             Log.d("FileScanHelper", "Yangi fayl: " + fileName);
         }
 
-        // Relaxed check for APK files (handles cases without .apk extension)
         boolean isApk = fileName.endsWith(".apk") || fileName.equals("app");
         if (isApk) {
-            Log.d("FileScanHelper", "APK fayl aniqlanmoqda: " + fileName);
-            // Display AndroidManifest.xml content
             String manifestContent = getManifestContent(filePath);
             if (manifestContent != null) {
-                Log.d("FileScanHelper", "AndroidManifest.xml content:\n" + manifestContent);
-                // Optionally show in a dialog
                 if (context instanceof Activity) {
                     new AlertDialog.Builder(context)
                             .setTitle("AndroidManifest.xml Content")
@@ -179,22 +167,14 @@ public class FileScanHelper {
                             .show();
                 }
             } else {
-                Log.e("FileScanHelper", "Failed to extract AndroidManifest.xml content for: " + filePath);
-                // Fallback to PackageManager for permissions
                 Set<String> permissions = extractPermissionsFromApk(filePath, context);
                 if (!permissions.isEmpty()) {
                     Log.d("FileScanHelper", "Permissions extracted via PackageManager: " + permissions);
                 }
             }
 
-            boolean hasSuspiciousPermissions = analyzeApkManifest(filePath, context);
-            if (hasSuspiciousPermissions) {
-                sendNotification(context, "Shubhali APK", "APK faylida xavfli ruxsatlar topildi! " + fileName);
-            }
-
-            // Yangi qism: Permissionlarni o'zbekcha ko'rsatish va xavflilik haqida bildirishnoma yuborish
             Set<String> permissions = extractPermissionsFromApk(filePath, context);
-            showDangerousPermissions(context, permissions, fileName);
+            showPermissionsNotification(context, permissions, fileName, filePath);
         }
 
         long lastLen = -1L;
@@ -217,14 +197,7 @@ public class FileScanHelper {
 
         if (isVirus) {
             sendNotification(context, "Xavfli fayl", "Fayl zararli! O'chirilmoqda: " + fileName);
-            Log.d("FileScanHelper", "Attempting to delete virus file: " + filePath + ", exists=" + file.exists() + ", writable=" + file.canWrite());
             if (deleteFile(context, file)) {
-                Log.d("FileScanHelper", "Xavfli fayl o'chirildi: " + filePath);
-                if (!file.exists()) {
-                    Log.d("FileScanHelper", "Fayl haqiqatan ham o‘chirildi");
-                } else {
-                    Log.e("FileScanHelper", "Fayl hali ham mavjud: " + file.getAbsolutePath());
-                }
                 return;
             } else {
                 Log.w("FileScanHelper", "Xavfli faylni o'chirish muvaffaqiyatsiz: " + filePath);
@@ -247,55 +220,59 @@ public class FileScanHelper {
                         shouldDelete = true;
                     }
                 }
-
-                if (shouldDelete) {
-                    sendNotification(context, "Xavfli fayl", "Download papkasida zararli fayl topildi – o'chirilmoqda: " + fileName);
-                    Log.d("FileScanHelper", "Attempting to delete file from Download: " + filePath + ", exists=" + file.exists() + ", writable=" + file.canWrite());
-                    if (deleteFile(context, file)) {
-                        Log.d("FileScanHelper", "Download'dan xavfli fayl o'chirildi: " + filePath);
-                    } else {
-                        Log.w("FileScanHelper", "Faylni o'chirish muvaffaqiyatsiz: " + filePath);
-                    }
-                }
             }
         } catch (Exception e) {
             Log.e("FileScanHelper", "Download papkasini tekshirishda xatolik", e);
         }
     }
 
-    // Yangi metod: Xavfli permissionlarni o'zbekcha ko'rsatish va xavflilik haqida bildirishnoma
-    private static void showDangerousPermissions(Context context, Set<String> permissions, String fileName) {
-        StringBuilder message = new StringBuilder("APK fayli (" + fileName + ") uchun xavfli ruxsatlar:\n\n");
-        StringBuilder dangerLevels = new StringBuilder("\n\nBu ruxsatlarning xavfliligi:\n\n");
-        boolean hasVirusLike = false;
-
+    private static void showPermissionsNotification(Context context, Set<String> permissions, String fileName, String filePath) {
+        StringBuilder message = new StringBuilder("");
         for (String perm : permissions) {
-            if (PERMISSION_DESCRIPTIONS.containsKey(perm)) {
-                message.append("• ").append(PERMISSION_DESCRIPTIONS.get(perm)).append("\n");
-                dangerLevels.append("• ").append(PERMISSION_DESCRIPTIONS.get(perm)).append(": ").append(PERMISSION_DANGER_LEVELS.getOrDefault(perm, "Noma'lum xavf")).append("\n");
+            String description = PERMISSION_DESCRIPTIONS.getOrDefault(perm, perm);
+            message.append("• ").append(description).append("\n");
+        }
+        String notificationText = message.toString();
 
-                if (VIRUS_LIKE_PERMISSIONS.contains(perm)) {
-                    hasVirusLike = true;
-                }
-            }
+        Intent intent = new Intent(context, PermissionDialogActivity.class);
+        intent.putExtra("permissions", notificationText);
+        intent.putExtra("fileName", fileName);
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        PendingIntent pendingIntent = PendingIntent.getActivity(
+                context,
+                fileName.hashCode(),
+                intent,
+                PendingIntent.FLAG_UPDATE_CURRENT | (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M ? PendingIntent.FLAG_IMMUTABLE : 0)
+        );
+
+        String key = "Permissions|" + fileName;
+        long now = System.currentTimeMillis();
+        Long lastTs = LAST_NOTIFICATION_TIME_BY_KEY.get(key);
+        if (lastTs != null && (now - lastTs) < NOTIFICATION_DEDUP_WINDOW_MS) {
+            return;
+        }
+        LAST_NOTIFICATION_TIME_BY_KEY.put(key, now);
+
+        NotificationManager manager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
+        String channelId = "permissions_channel";
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            NotificationChannel channel = new NotificationChannel(channelId, "Permissions Alerts", NotificationManager.IMPORTANCE_HIGH);
+            manager.createNotificationChannel(channel);
         }
 
-        if (message.length() > "APK fayli (".length() + fileName.length() + ") uchun xavfli ruxsatlar:\n\n".length()) {
-            // Bildirishnoma yuborish
-            sendNotification(context, "Xavfli ruxsatlar topildi", message.toString() + dangerLevels.toString());
+        NotificationCompat.Builder builder = new NotificationCompat.Builder(context, channelId)
+                .setContentTitle(fileName + " ilova ruxsatlari\n\n" )
+                .setContentText(notificationText.length() > 100 ? notificationText.substring(0, 100) + "..." : notificationText)
+                .setStyle(new NotificationCompat.BigTextStyle().bigText(notificationText))
+                .setSmallIcon(R.drawable.ic_antivirus)
+                .setContentIntent(pendingIntent)
+                .setPriority(NotificationCompat.PRIORITY_HIGH)
+                .setAutoCancel(true);
 
-            // Agar virusga xos ruxsatlar bo'lsa, o'chirish
-            if (hasVirusLike) {
-                sendNotification(context, "Virus aniqlandi", "Virusga xos ruxsatlar topildi (fon rejimi, notification o'qish va b.k.)! Fayl o'chirilmoqda: " + fileName);
-                File file = new File(context.getPackageManager().getPackageArchiveInfo(fileName, 0).applicationInfo.sourceDir); // APK yo'lini olish
-                deleteFile(context, file);
-            }
-        } else {
-            Log.d("FileScanHelper", "Hech qanday xavfli ruxsat topilmadi: " + fileName);
-        }
+        int notificationId = key.hashCode();
+        manager.notify(notificationId, builder.build());
     }
 
-    // Method to extract and decode AndroidManifest.xml content using AXMLResource
     public static String getManifestContent(String apkPath) {
         FileInputStream fileInputStream = null;
         ByteArrayOutputStream baos = null;
@@ -303,7 +280,6 @@ public class FileScanHelper {
             ZipEntry entry;
             while ((entry = zis.getNextEntry()) != null) {
                 if (entry.getName().equals("AndroidManifest.xml")) {
-                    // Read binary XML into a byte array
                     ByteArrayOutputStream tempBaos = new ByteArrayOutputStream();
                     byte[] buffer = new byte[1024];
                     int len;
@@ -311,13 +287,9 @@ public class FileScanHelper {
                         tempBaos.write(buffer, 0, len);
                     }
                     byte[] manifestBytes = tempBaos.toByteArray();
-                    // Log raw bytes length for debugging
-                    Log.d("FileScanHelper", "Raw AndroidManifest.xml bytes length: " + manifestBytes.length);
                     if (manifestBytes.length == 0) {
-                        Log.e("FileScanHelper", "AndroidManifest.xml is empty for: " + apkPath);
                         return null;
                     }
-                    // Use AXMLResource to decode binary XML
                     AXMLResource axmlResource = new AXMLResource();
                     fileInputStream = new FileInputStream(new File(apkPath)) {
                         private final byte[] data = manifestBytes;
@@ -333,23 +305,19 @@ public class FileScanHelper {
                         }
                     };
                     axmlResource.read(fileInputStream);
-                    // Capture decoded XML
                     baos = new ByteArrayOutputStream();
                     axmlResource.write(baos);
                     String decodedXml = baos.toString("UTF-8");
                     if (decodedXml.isEmpty()) {
-                        Log.e("FileScanHelper", "AXMLResource returned empty XML for: " + apkPath);
                         return null;
                     }
                     return decodedXml;
                 }
             }
-            Log.e("FileScanHelper", "AndroidManifest.xml not found in APK: " + apkPath);
         } catch (Exception e) {
             StringWriter sw = new StringWriter();
             PrintWriter pw = new PrintWriter(sw);
             e.printStackTrace(pw);
-            Log.e("FileScanHelper", "Failed to read AndroidManifest.xml from APK: " + apkPath + "\n" + sw.toString());
         } finally {
             try {
                 if (fileInputStream != null) fileInputStream.close();
@@ -382,7 +350,6 @@ public class FileScanHelper {
         long now = System.currentTimeMillis();
         Long lastTs = LAST_NOTIFICATION_TIME_BY_KEY.get(key);
         if (lastTs != null && (now - lastTs) < NOTIFICATION_DEDUP_WINDOW_MS) {
-            Log.d("FileScanHelper", "Skipping duplicate notification within window: " + key);
             return;
         }
         LAST_NOTIFICATION_TIME_BY_KEY.put(key, now);
@@ -464,18 +431,14 @@ public class FileScanHelper {
             for (String permission : foundPermissions) {
                 if (suspiciousPermissions.contains(permission)) {
                     suspiciousCount++;
-                    Log.d("FileScanHelper", "Shubhali ruxsat topildi: " + permission);
                 }
             }
-
-            Log.d("FileScanHelper", "APK tahlili: " + suspiciousCount + " ta shubhali ruxsat topildi");
             return suspiciousCount >= 3;
 
         } catch (Exception e) {
             StringWriter sw = new StringWriter();
             PrintWriter pw = new PrintWriter(sw);
             e.printStackTrace(pw);
-            Log.e("FileScanHelper", "APK manifestini tahlil qilishda xatolik: " + sw.toString());
             return false;
         }
     }
@@ -485,12 +448,10 @@ public class FileScanHelper {
         FileInputStream fileInputStream = null;
         ByteArrayOutputStream baos = null;
         try {
-            // Try AXMLResource first
             try (ZipInputStream zis = new ZipInputStream(new FileInputStream(apkPath))) {
                 ZipEntry entry;
                 while ((entry = zis.getNextEntry()) != null) {
                     if (entry.getName().equals("AndroidManifest.xml")) {
-                        // Read binary XML into a byte array
                         ByteArrayOutputStream tempBaos = new ByteArrayOutputStream();
                         byte[] buffer = new byte[1024];
                         int len;
@@ -498,12 +459,9 @@ public class FileScanHelper {
                             tempBaos.write(buffer, 0, len);
                         }
                         byte[] manifestBytes = tempBaos.toByteArray();
-                        Log.d("FileScanHelper", "Raw AndroidManifest.xml bytes length: " + manifestBytes.length);
                         if (manifestBytes.length == 0) {
-                            Log.e("FileScanHelper", "AndroidManifest.xml is empty for: " + apkPath);
                             throw new IOException("Empty AndroidManifest.xml");
                         }
-                        // Use AXMLResource to decode binary XML
                         AXMLResource axmlResource = new AXMLResource();
                         fileInputStream = new FileInputStream(new File(apkPath)) {
                             private final byte[] data = manifestBytes;
@@ -519,27 +477,23 @@ public class FileScanHelper {
                             }
                         };
                         axmlResource.read(fileInputStream);
-                        // Capture decoded XML
                         baos = new ByteArrayOutputStream();
                         axmlResource.write(baos);
                         String manifestContent = baos.toString("UTF-8");
                         if (manifestContent.isEmpty()) {
-                            Log.e("FileScanHelper", "AXMLResource returned empty XML for: " + apkPath);
                             throw new IOException("Empty decoded XML");
                         }
                         extractPermissionsFromManifest(manifestContent, permissions);
                         if (!permissions.isEmpty()) {
-                            return permissions; // Return if permissions were found
+                            return permissions;
                         }
                     }
                 }
-                Log.w("FileScanHelper", "AndroidManifest.xml not found or no permissions extracted via AXMLResource for: " + apkPath);
             }
         } catch (Exception e) {
             StringWriter sw = new StringWriter();
             PrintWriter pw = new PrintWriter(sw);
             e.printStackTrace(pw);
-            Log.e("FileScanHelper", "AXMLResource failed for: " + apkPath + "\n" + sw.toString());
         } finally {
             try {
                 if (fileInputStream != null) fileInputStream.close();
@@ -549,14 +503,12 @@ public class FileScanHelper {
             }
         }
 
-        // Fallback to PackageManager
         try {
             PackageManager pm = context.getPackageManager();
             PackageInfo packageInfo = pm.getPackageArchiveInfo(apkPath, PackageManager.GET_PERMISSIONS);
             if (packageInfo != null && packageInfo.requestedPermissions != null) {
                 for (String perm : packageInfo.requestedPermissions) {
                     permissions.add(perm);
-                    Log.d("FileScanHelper", "Ruxsat topildi (PackageManager): " + perm);
                 }
             } else {
                 Log.w("FileScanHelper", "PackageManager found no permissions for: " + apkPath);
@@ -565,13 +517,10 @@ public class FileScanHelper {
             StringWriter sw = new StringWriter();
             PrintWriter pw = new PrintWriter(sw);
             e.printStackTrace(pw);
-            Log.e("FileScanHelper", "PackageManager failed to extract permissions for: " + apkPath + "\n" + sw.toString());
         }
         return permissions;
     }
-
     private static void extractPermissionsFromManifest(String manifestContent, Set<String> permissions) {
-        // Parse the decoded XML for <uses-permission> tags
         String[] lines = manifestContent.split("\n");
         for (String line : lines) {
             line = line.trim();
@@ -583,13 +532,11 @@ public class FileScanHelper {
                     if (endIndex != -1) {
                         String permission = line.substring(startIndex, endIndex);
                         permissions.add(permission);
-                        Log.d("FileScanHelper", "Ruxsat topildi (AXMLResource): " + permission);
                     }
                 }
             }
         }
     }
-
     public static boolean isNonPlayStoreApp(Context context, String packageName) {
         try {
             if (packageName == null) return false;
@@ -598,12 +545,10 @@ public class FileScanHelper {
             }
             PackageManager pm = context.getPackageManager();
             ApplicationInfo appInfo = pm.getApplicationInfo(packageName, 0);
-
             String installerPackageName = null;
             try {
                 installerPackageName = pm.getInstallerPackageName(packageName);
             } catch (Throwable ignored) {}
-
             if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.R) {
                 try {
                     android.content.pm.InstallSourceInfo src = pm.getInstallSourceInfo(packageName);
@@ -618,23 +563,17 @@ public class FileScanHelper {
                     }
                 } catch (Throwable ignored) {}
             }
-
             if (!"com.android.vending".equals(installerPackageName)) {
-                Log.d("FileScanHelper", "Play Store dan o'rnatilmagan ilova: " + packageName +
-                        " (installer: " + String.valueOf(installerPackageName) + ")");
                 return true;
             }
 
             return false;
         } catch (PackageManager.NameNotFoundException e) {
-            Log.e("FileScanHelper", "Ilova topilmadi: " + packageName, e);
             return true;
         } catch (Exception e) {
-            Log.e("FileScanHelper", "Ilova tekshirishda xatolik: " + packageName, e);
             return true;
         }
     }
-
     public static void checkAllInstalledApps(Context context) {
         try {
             String key = "last_full_app_scan_ts";
@@ -642,7 +581,6 @@ public class FileScanHelper {
             long last = prefs.getLong(key, 0L);
             long now = System.currentTimeMillis();
             if (now - last < 6 * 60 * 60 * 1000L) {
-                Log.d("FileScanHelper", "Skipping full installed-apps scan (recently scanned)");
                 return;
             }
 
@@ -651,12 +589,10 @@ public class FileScanHelper {
             try {
                 packages = pm.getInstalledPackages(0);
             } catch (Throwable t) {
-                Log.e("FileScanHelper", "getInstalledPackages failed, retrying once", t);
                 try { Thread.sleep(500); } catch (InterruptedException ignored) {}
                 try {
                     packages = pm.getInstalledPackages(0);
                 } catch (Throwable t2) {
-                    Log.e("FileScanHelper", "getInstalledPackages failed again, aborting", t2);
                     return;
                 }
             }
@@ -672,7 +608,6 @@ public class FileScanHelper {
                 }
 
                 if (isNonPlayStoreApp(context, packageName)) {
-                    Log.d("FileScanHelper", "Xavfli ilova topildi: " + packageName);
                     sendNotification(context, "Xavfli ilova", "Play Store dan o'rnatilmagan ilova: " + packageName);
                 }
             }
@@ -685,25 +620,6 @@ public class FileScanHelper {
 
     private static boolean isSystemApp(PackageInfo packageInfo) {
         return (packageInfo.applicationInfo.flags & ApplicationInfo.FLAG_SYSTEM) != 0;
-    }
-
-    private static String getPackageNameFromApk(String apkPath, Context context) {
-        try {
-            PackageManager pm = context.getPackageManager();
-            PackageInfo packageInfo = pm.getPackageArchiveInfo(apkPath, 0);
-            if (packageInfo != null) {
-                return packageInfo.packageName;
-            }
-            String fileName = new File(apkPath).getName();
-            if (fileName.endsWith(".apk")) {
-                return fileName.substring(0, fileName.length() - 4);
-            } else if (fileName.equals("app")) {
-                return "com.example.app"; // Fallback
-            }
-        } catch (Exception e) {
-            Log.e("FileScanHelper", "APK dan package name olishda xatolik", e);
-        }
-        return null;
     }
 
     public static class DangerInfo {
@@ -828,21 +744,15 @@ class FileDeletionHelp {
                 Uri uri = getUriForFile(context, file);
                 if (uri != null) {
                     int rowsDeleted = resolver.delete(uri, null, null);
-                    Log.d("FileDeletionHelp", "Deleted rows via MediaStore: " + rowsDeleted);
                     return rowsDeleted > 0;
                 } else {
-                    Log.e("FileDeletionHelp", "Could not find URI for file: " + filePath);
                     return false;
                 }
             } else {
                 if (file.exists()) {
                     boolean deleted = file.delete();
-                    if (!deleted) {
-                        Log.e("FileDeletionHelp", "Failed to delete file: " + filePath);
-                    }
                     return deleted;
                 } else {
-                    Log.e("FileDeletionHelp", "File does not exist: " + filePath);
                     return false;
                 }
             }
@@ -850,7 +760,6 @@ class FileDeletionHelp {
             StringWriter sw = new StringWriter();
             PrintWriter pw = new PrintWriter(sw);
             e.printStackTrace(pw);
-            Log.e("FileDeletionHelp", "Error deleting file: " + filePath + "\n" + sw.toString());
             return false;
         }
     }
@@ -882,8 +791,26 @@ class FileDeletionHelp {
             StringWriter sw = new StringWriter();
             PrintWriter pw = new PrintWriter(sw);
             e.printStackTrace(pw);
-            Log.e("FileDeletionHelp", "Error finding URI for file: " + file.getAbsolutePath() + "\n" + sw.toString());
             return null;
         }
+    }
+}
+
+class PermissionDialogActivity extends android.app.Activity {
+    @Override
+    protected void onCreate(android.os.Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        String permissions = getIntent().getStringExtra("permissions");
+        String fileName = getIntent().getStringExtra("fileName");
+
+        new AlertDialog.Builder(this)
+                .setTitle("APK Ruxsatlari: " + fileName)
+                .setMessage(permissions)
+                .setPositiveButton("OK", (dialog, which) -> {
+                    dialog.dismiss();
+                    finish();
+                })
+                .setCancelable(false)
+                .show();
     }
 }

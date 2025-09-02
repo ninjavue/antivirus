@@ -1,21 +1,59 @@
-# Add project specific ProGuard rules here.
-# You can control the set of applied configuration files using the
-# proguardFiles setting in build.gradle.
-#
-# For more details, see
-#   http://developer.android.com/guide/developing/tools/proguard.html
+# Log
+-assumenosideeffects class android.util.Log {
+    public static *** d(...);
+    public static *** v(...);
+    public static *** i(...);
+    public static *** w(...);
+}
 
-# If your project uses WebView with JS, uncomment the following
-# and specify the fully qualified class name to the JavaScript interface
-# class:
-#-keepclassmembers class fqcn.of.javascript.interface.for.webview {
-#   public *;
-#}
+# Enum’s
+-keepclassmembers class ** {
+    **[] $VALUES;
+    public static ** valueOf(java.lang.String);
+}
 
-# Uncomment this to preserve the line number information for
-# debugging stack traces.
-#-keepattributes SourceFile,LineNumberTable
+# Parcelable (Android classes)
+-keepclassmembers class * implements android.os.Parcelable {
+    public static final android.os.Parcelable$Creator CREATOR;
+}
 
-# If you keep the line number information, uncomment this to
-# hide the original source file name.
-#-renamesourcefileattribute SourceFile
+######################
+# AndroidX / Support
+######################
+-keep class androidx.** { *; }
+-dontwarn androidx.**
+
+###############
+# Retrofit / OkHttp
+###############
+-keep class retrofit2.** { *; }
+-keep interface retrofit2.** { *; }
+-dontwarn okhttp3.**
+-dontwarn okio.**
+-dontwarn retrofit2.**
+
+##############
+# Gson / Moshi
+##############
+# Gson uchun model klasslar saqlanishi kerak:
+-keep class uz.csec.antivirus.model.** { *; }
+
+# Moshi ishlatsa (faqat Java):
+-keep class com.squareup.moshi.** { *; }
+-dontwarn com.squareup.moshi.**
+
+#########
+# Glide
+#########
+-keep class com.bumptech.glide.** { *; }
+-dontwarn com.bumptech.glide.**
+# Asosiy Application yoki refleksiya orqali chaqiriladigan klasslarni saqlang
+-keep class uz.csec.antivirus.MainActivity { *; }
+
+# API interfeyslarini saqlash
+-keep public class com.example.app.api.** { public *; }
+
+
+# DeviceUtils klassini va metodlarini obfuskatsiya qilinmasin
+-keep class uz.csec.antivirus.NativeLib { *; }
+

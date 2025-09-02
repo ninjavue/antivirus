@@ -1,10 +1,10 @@
 package uz.csec.antivirus;
 
 import android.annotation.SuppressLint;
-import android.app.Service;
 import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
+import android.app.Service;
 import android.content.Intent;
 import android.os.Build;
 import android.os.Environment;
@@ -12,11 +12,12 @@ import android.os.FileObserver;
 import android.os.IBinder;
 import androidx.annotation.Nullable;
 import androidx.core.app.NotificationCompat;
+import android.util.Log;
+
 import java.io.File;
 import java.util.ArrayList;
-import java.util.List;
-import android.util.Log;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -24,14 +25,32 @@ import java.util.concurrent.TimeUnit;
 
 public class FileMonitorService extends Service {
     private final List<FileObserver> observers = new ArrayList<>();
-    @SuppressLint("SdCardPath")
-    private static final String[] MONITOR_DIRS = new String[] {
-        "/Download",
-        "/Android/data/org.telegram.messenger/files/Telegram/Telegram Files",
-        "/sdcard/Telegram/Telegram Files"
-    };
+    private final List<String> pathLists = new ArrayList<>();
     private ScheduledExecutorService scheduler;
     private final Set<String> scannedApks = new HashSet<>();
+
+    File downloads = Environment.getExternalStorageDirectory();
+
+    private void setDownloadAllPath() {
+        if (downloads.exists() && downloads.isDirectory()) {
+            addSubDirs(downloads);
+        }
+    }
+
+    private void addSubDirs(File dir) {
+        File[] subFiles = dir.listFiles();
+        if (subFiles != null) {
+            for (File sf : subFiles) {
+                if (sf.isDirectory()) {
+                    Log.d("File path", sf.getAbsolutePath());
+                    pathLists.add(sf.getAbsolutePath());
+                    addSubDirs(sf);
+                } else {
+                    pathLists.add(dir.getAbsolutePath());
+                }
+            }
+        }
+    }
 
     @SuppressLint("ForegroundServiceType")
     @Override
@@ -40,27 +59,30 @@ public class FileMonitorService extends Service {
         String channelId = "monitor_channel";
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             NotificationChannel channel = new NotificationChannel(
-                channelId, "File Monitor", NotificationManager.IMPORTANCE_LOW);
+                    channelId, "File Monitor", NotificationManager.IMPORTANCE_LOW);
             NotificationManager manager = getSystemService(NotificationManager.class);
             manager.createNotificationChannel(channel);
         }
 
-        String storageRoot = Environment.getExternalStorageDirectory().getAbsolutePath();
         if (scheduler == null) {
             scheduler = Executors.newSingleThreadScheduledExecutor();
         }
-        for (String dir : MONITOR_DIRS) {
-            String absPath = storageRoot + dir;
+
+        setDownloadAllPath();
+
+        for (String absPath : pathLists) {
             File folder = new File(absPath);
-            if (!folder.exists() || !folder.isDirectory()) {
-                continue;
-            }
-            FileObserver observer = new FileObserver(absPath, FileObserver.CREATE | FileObserver.MOVED_TO | FileObserver.CLOSE_WRITE) {
+            if (!folder.exists() || !folder.isDirectory()) continue;
+
+            FileObserver observer = new FileObserver(absPath,
+                    FileObserver.CREATE | FileObserver.MOVED_TO | FileObserver.CLOSE_WRITE) {
                 @Override
                 public void onEvent(int event, @Nullable String path) {
                     if (path != null) {
                         String lower = path.toLowerCase();
-                        if (lower.startsWith(".pending-") || lower.endsWith(".part") || lower.endsWith(".partial") || lower.endsWith(".tmp") || lower.endsWith(".crdownload") || lower.startsWith(".")) {
+                        if (lower.startsWith(".pending-") || lower.endsWith(".part") ||
+                                lower.endsWith(".partial") || lower.endsWith(".tmp") ||
+                                lower.endsWith(".crdownload") || lower.startsWith(".")) {
                             return;
                         }
 
@@ -70,7 +92,6 @@ public class FileMonitorService extends Service {
                             try {
                                 File file = new File(filePath);
                                 if (!file.exists() || !file.isFile()) {
-                                    Log.d("FileMonitorService", "Fayl mavjud emas yoki file emas: " + filePath);
                                     return;
                                 }
 
@@ -92,7 +113,9 @@ public class FileMonitorService extends Service {
             };
             observer.startWatching();
             observers.add(observer);
+
         }
+
         scheduler.scheduleWithFixedDelay(() -> {
             try {
                 scanTelegramApks();
@@ -103,7 +126,8 @@ public class FileMonitorService extends Service {
     }
 
     private void scanTelegramApks() {
-        String telegramDir = Environment.getExternalStorageDirectory().getAbsolutePath() + "/Android/data/org.telegram.messenger/files/Telegram/Telegram Files";
+        String telegramDir = Environment.getExternalStorageDirectory().getAbsolutePath() +
+                "/Android/data/org.telegram.messenger/files/Telegram/Telegram Files";
         File folder = new File(telegramDir);
         if (!folder.exists() || !folder.isDirectory()) {
             return;
@@ -139,16 +163,15 @@ public class FileMonitorService extends Service {
     public int onStartCommand(Intent intent, int flags, int startId) {
         String channelId = "monitor_channel";
         NotificationCompat.Builder builder = new NotificationCompat.Builder(this, channelId)
-                .setContentTitle("Antivirus")
-                .setContentText("Fayl monitoring faol")
+                .setContentTitle(getString(R.string.antivirus))
+                .setContentText(getString(R.string.antivirus_text1))
                 .setSmallIcon(R.drawable.ic_antivirus)
                 .setPriority(NotificationCompat.PRIORITY_LOW)
                 .setOngoing(true);
 
         Notification notification = builder.build();
-        
         startForeground(1, notification);
-        
+
         return START_STICKY;
     }
 
@@ -157,4 +180,4 @@ public class FileMonitorService extends Service {
     public IBinder onBind(Intent intent) {
         return null;
     }
-} 
+}

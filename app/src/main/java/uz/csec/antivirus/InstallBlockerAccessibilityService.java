@@ -11,7 +11,6 @@ public class InstallBlockerAccessibilityService extends AccessibilityService {
         if (event.getPackageName() == null) return;
         String pkg = event.getPackageName().toString();
         if (pkg.contains("packageinstaller")) {
-            Log.d("InstallBlocker", "Install dialog detected: " + pkg);
             AccessibilityNodeInfo root = getRootInActiveWindow();
             if (root != null) {
                 blockInstallButton(root);
@@ -29,7 +28,6 @@ public class InstallBlockerAccessibilityService extends AccessibilityService {
                     String t = text.toString().toLowerCase();
                     if (t.contains("cancel") || t.contains("bekor") || t.contains("отмена")) {
                         child.performAction(AccessibilityNodeInfo.ACTION_CLICK);
-                        Log.d("InstallBlocker", "Install dialog canceled!");
                     }
                 }
                 blockInstallButton(child);

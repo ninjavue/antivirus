@@ -48,4 +48,22 @@
     <string name="s_files" translatable="false">Shubhali fayllar</string>
     <string name="y_files" translatable="false">Yashirin fayllar</string>
     <string name="aniqlangan_zararli_fayllar">Aniqlangan zararli fayllar</string>
+    <string name="virus_detected_title" translatable="false">Virus aniqladi.</string>
+    <string name="virus_detected_path">"Joylashuvi: "</string>
+    <string name="virus_detected_message">Virus aniqlandi</string>
+    <string name="virus_alerts" translatable="false">Virus</string>
+    <string name="virus_notification_description" translatable="false">Virus</string>
+    <string name="virus_file">"Virus fayl: "</string>
+    <string name="virus_path">"Joylashuvi: "</string>
+    <string name="error">Xatolik yuz berdi</string>
+    <string name="file_not_found">Fayl topilmadi.</string>
+    <string name="delete_failed">Fayl o\'chirilmoqda</string>
+    <string name="suspicious_app_message">Suspicious app message</string>
+    <string name="certificate_analysis_error" translatable="false">Certificate analysis Error</string>
+    <string name="no_certificate_info">no_certificate info</string>
+    <string name="file_deleted_title">Faylni o\'chirish</string>
+    <string name="delete_failed_title">Faylni o\'chirishda xatolik yuz berdi</string>
+    <string name="file_deleted_message">Bu fayl virus fayl uni o\'chiring</string>
+    <string name="delete_failed_message">Faylni o\'chirishda xatolik yuz berdi\n</string>
+    <string name="antivirus_text1" translatable="false">Antivirus kuzatuv rejimida</string>
 </resources>

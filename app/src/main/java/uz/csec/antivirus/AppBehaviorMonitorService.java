@@ -46,14 +46,14 @@ public class AppBehaviorMonitorService extends Service {
     private static final String TAG = "AppBehaviorMonitor";
     private static final String CHANNEL_ID_MONITOR = "app_behavior_monitor";
     private static final String CHANNEL_ID_ALERT = "virus_alerts";
-    private static final String CHANNEL_ID_WARNING = "app_warnings"; // Yangi kanal qo'shildi
+    private static final String CHANNEL_ID_WARNING = "app_warnings";
     private static final long SCAN_INTERVAL_MIN = 15;
 
     // ====== Heuristic thresholds ======
-    private static final int DEX_SMALL_BYTES = 300 * 1024; // <300KB -> shubhali
-    private static final double ENTROPY_RAW_SUSP = 7;     // 7.6/8 ≈ 0.95
+    private static final int DEX_SMALL_BYTES = 300 * 1024;
+    private static final double ENTROPY_RAW_SUSP = 7;
     private static final double ENTROPY_NORM_SUSP = 0.95;
-    private static final int MIN_MANIFEST_SIZE = 100;      // Minimal AndroidManifest.xml hajmi (baytlarda)
+    private static final int MIN_MANIFEST_SIZE = 100;
 
     private ScheduledExecutorService scheduler;
 
@@ -191,7 +191,6 @@ public class AppBehaviorMonitorService extends Service {
     }
 
     private void maybeNotifyWarning(Context context, String packageName, String appName, List<String> reasons) {
-        // Har safar bildirishnoma chiqarish uchun SharedPreferences check olib tashlandi
         String message = android.text.TextUtils.join("\n", reasons);
         NotificationCompat.Builder b = new NotificationCompat.Builder(context, CHANNEL_ID_WARNING)
                 .setSmallIcon(R.drawable.ic_antivirus)
@@ -311,7 +310,6 @@ public class AppBehaviorMonitorService extends Service {
             return true;
         }
 
-        // Manifest hajmi juda kichik bo'lsa (masalan, <100 bayt)
         if (bytes.length < MIN_MANIFEST_SIZE) {
             Log.d(TAG, "Manifest too small: " + bytes.length + " bytes");
             return true;

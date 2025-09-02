@@ -1,5 +1,7 @@
 package uz.csec.antivirus;
 
+import android.app.AppOpsManager;
+import android.content.Context;
 import android.content.Intent;
 import android.os.Build;
 import android.os.Bundle;
@@ -43,7 +45,7 @@ public class MainActivity extends BaseActivity {
     private LinearLayout bottomNavigationView;
     private LinearLayout navHome, navMulti, navSettings;
     private static final int RC_POST_NOTIFICATIONS = 1001;
-
+    private static final int REQUEST_STORAGE = 1001;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -57,9 +59,9 @@ public class MainActivity extends BaseActivity {
                 new WindowInsetsControllerCompat(getWindow(), getWindow().getDecorView());
         insetsController.setAppearanceLightStatusBars(true);
 
-        Intent serviceIntent = new Intent(this, AppBehaviorMonitorService.class);
-        serviceIntent.setAction("scan_now");
-        startService(serviceIntent);
+//        Intent serviceIntent = new Intent(this, AppBehaviorMonitorService.class);
+//        serviceIntent.setAction("scan_now");
+//        startService(serviceIntent);
 
         setContentView(R.layout.activity_main);
         setupBottomNav();
@@ -71,6 +73,18 @@ public class MainActivity extends BaseActivity {
                 ActivityCompat.requestPermissions(this,
                     new String[]{Manifest.permission.POST_NOTIFICATIONS}, RC_POST_NOTIFICATIONS);
             }
+        }
+
+        if (!hasStoragePermission()) {
+            requestStoragePermission();
+        }
+        if (!hasUsageStatsPermission()) {
+            requestUsageStatsPermission();
+        }
+
+        Intent serviceInten = new Intent(this, AntivirusService.class);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            startForegroundService(serviceInten);
         }
 
         GridLayout grid = findViewById(R.id.gridFeatures);
@@ -124,16 +138,12 @@ public class MainActivity extends BaseActivity {
 
         uz.csec.antivirus.CircularProgressView progressView = findViewById(R.id.progressGradient);
         Button btnOptimize = findViewById(R.id.btnOptimize);
-        
-        // Set text for progress view
 
         new Handler().postDelayed(() -> progressView.animateProgress(0.89f), 400);
         btnOptimize.setScaleX(0f);
         
-        // Start file monitoring services
         startFileMonitoringServices();
         
-        // Setup file picker (must be done in onCreate)
         setupFilePicker();
         
         btnOptimize.setScaleY(0f);
@@ -145,19 +155,15 @@ public class MainActivity extends BaseActivity {
     private void startFileMonitoringServices() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             startForegroundService(new Intent(this, FileMonitorService.class));
-            startForegroundService(new Intent(this, TelegramDownloadMonitorService.class));
-            startForegroundService(new Intent(this, AppBehaviorMonitorService.class));
         } else {
             startService(new Intent(this, FileMonitorService.class));
-            startService(new Intent(this, TelegramDownloadMonitorService.class));
-            startService(new Intent(this, AppBehaviorMonitorService.class));
         }
     }
     
     @Override
     protected void onResume() {
         super.onResume();
-        
+
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             Intent intent = new Intent();
             String packageName = getPackageName();
@@ -199,7 +205,6 @@ public class MainActivity extends BaseActivity {
         intent.addCategory(Intent.CATEGORY_OPENABLE);
         filePickerLauncher.launch(Intent.createChooser(intent, getString(R.string.select_file)));
     }
-
     private void scanPickedFile(String filePath, Uri fileUri) {
         CircularProgressView progressView = findViewById(R.id.progressGradient);
         Button btnOptimize = findViewById(R.id.btnOptimize);
@@ -272,29 +277,33 @@ public class MainActivity extends BaseActivity {
     }
 
     private void showScanResultDialog(boolean isVirus, String filePath, Uri fileUri) {
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        AlertDialog.Builder builder = new AlertDialog.Builder(this, R.style.MyAlertDialogTheme);
+
         if (isVirus) {
             builder.setTitle("Xavfli fayl aniqlandi!")
-                .setMessage("Bu fayl zararli! Asl faylni Telegram yoki fayl menejeri orqali o'chiring.\n\nFayl: " + filePath)
-                .setPositiveButton("Faylni ochish", (d, w) -> {
-                    Intent intent = new Intent(Intent.ACTION_VIEW);
-                    intent.setDataAndType(fileUri, "application/vnd.android.package-archive");
-                    intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
-                    try {
-                        startActivity(intent);
-                    } catch (Exception e) {
-                        Toast.makeText(this, "Faylni ochib bo'lmadi", Toast.LENGTH_SHORT).show();
-                    }
-                })
-                .setNegativeButton("Yopish", null)
-                .show();
+                    .setMessage("Bu fayl zararli!\n\nFayl: " + filePath)
+                    .setPositiveButton("Faylni ko‘rish", (d, w) -> {
+                        try {
+                            Intent intent = new Intent(Intent.ACTION_VIEW);
+                            intent.setDataAndType(fileUri, "*/*");
+                            intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                            startActivity(Intent.createChooser(intent, "Faylni ochish"));
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                            Toast.makeText(this, "Faylni ochib bo‘lmadi", Toast.LENGTH_SHORT).show();
+                        }
+                    })
+                    .setNegativeButton("Yopish", null)
+                    .show();
         } else {
             builder.setTitle("Fayl xavfsiz")
-                .setMessage("Fayl xavfsiz: " + filePath)
-                .setPositiveButton("OK", null)
-                .show();
+                    .setMessage("Fayl xavfsiz: " + filePath)
+                    .setPositiveButton("OK", null)
+                    .show();
         }
     }
+
+
 
     private String getFilePathFromUri(Uri uri) {
         if (uri == null) return null;
@@ -325,13 +334,51 @@ public class MainActivity extends BaseActivity {
         return null;
     }
 
-    private void tekshirishBarchaIlovalar() {
-        new Thread(() -> {
-            try {
-                FileScanHelper.checkAllInstalledApps(getApplicationContext());
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        }).start();
+
+    private boolean hasStoragePermission() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            return ContextCompat.checkSelfPermission(this, Manifest.permission.READ_MEDIA_AUDIO) == PackageManager.PERMISSION_GRANTED &&
+                    ContextCompat.checkSelfPermission(this, Manifest.permission.READ_MEDIA_VIDEO) == PackageManager.PERMISSION_GRANTED &&
+                    ContextCompat.checkSelfPermission(this, Manifest.permission.READ_MEDIA_IMAGES) == PackageManager.PERMISSION_GRANTED;
+        } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            return ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED;
+        }
+        return true;
+    }
+
+    private void requestStoragePermission() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            ActivityCompat.requestPermissions(this, new String[]{
+                    Manifest.permission.READ_MEDIA_AUDIO,
+                    Manifest.permission.READ_MEDIA_VIDEO,
+                    Manifest.permission.READ_MEDIA_IMAGES
+            }, REQUEST_STORAGE);
+        } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, REQUEST_STORAGE);
+        }
+    }
+
+    private boolean hasUsageStatsPermission() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            AppOpsManager appOps = (AppOpsManager) getSystemService(Context.APP_OPS_SERVICE);
+            int mode = appOps.checkOpNoThrow(AppOpsManager.OPSTR_GET_USAGE_STATS,
+                    android.os.Process.myUid(), getPackageName());
+            return mode == AppOpsManager.MODE_ALLOWED;
+        }
+        return true;
+    }
+
+    private void requestUsageStatsPermission() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            startActivity(new Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS));
+        }
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (requestCode == REQUEST_STORAGE) {
+            if (hasStoragePermission()) recreate();
+        }
     }
 }

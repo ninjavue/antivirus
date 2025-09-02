@@ -24,12 +24,12 @@
            <!-- Header -->
            <LinearLayout
                android:id="@+id/header"
-               android:layout_width="match_parent"
+               android:layout_width="wrap_content"
                android:layout_height="wrap_content"
                android:orientation="horizontal"
                android:paddingHorizontal="6dp"
                android:paddingVertical="10dp"
-               android:layout_marginTop="16dp"
+               android:layout_marginTop="26dp"
                android:background="?android:attr/selectableItemBackgroundBorderless"
                tools:ignore="ExtraText">
                android:gravity="center_vertical">
@@ -41,7 +41,8 @@
                    android:src="@drawable/ic_back_arrow"
                    android:background="@android:color/transparent"
                    android:contentDescription="Back"
-                   app:tint="@color/antivirus_text" />
+                   app:tint="@color/antivirus_text"
+                   tools:ignore="ChildInNonViewGroup" />
 
                <TextView
                    android:layout_width="0dp"
@@ -51,7 +52,8 @@
                    android:layout_marginTop="12dp"
                    android:textSize="18sp"
                    android:textStyle="bold"
-                   android:textColor="@color/antivirus_text" />
+                   android:textColor="@color/antivirus_text"
+                   tools:ignore="ChildInNonViewGroup" />
            </LinearLayout>
 
            <!-- Statistics Cards -->

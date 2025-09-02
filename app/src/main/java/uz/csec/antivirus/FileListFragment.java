@@ -53,7 +53,6 @@ public class FileListFragment extends Fragment {
         adapter = new FileAdapter();
         recyclerView.setAdapter(adapter);
 
-        // Apply any listener that may have been set before adapter was created
         if (pendingScanListener != null) {
             adapter.setOnFileScanListener(pendingScanListener);
         }

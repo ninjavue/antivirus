@@ -13,17 +13,17 @@ public class AntivirusDatabase extends SQLiteOpenHelper {
     }
 
     @Override
-
     public void onCreate(SQLiteDatabase db) {
         String CREATE_TABLE = "CREATE TABLE virus_files (" +
                 "id INTEGER PRIMARY KEY AUTOINCREMENT, " +
                 "file_name TEXT, " +
-                "file_path TEXT, " +
+                "file_path TEXT UNIQUE, " +
                 "file_size INTEGER," +
                 "detected_at TEXT, " +
-                "hash TEXT UNIQUE)";
+                "hash TEXT)";
         db.execSQL(CREATE_TABLE);
     }
+
 
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {

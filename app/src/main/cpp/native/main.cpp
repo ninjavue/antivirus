@@ -97,7 +97,6 @@ Java_uz_csec_antivirus_NativeLib_quickScanFiles(
     }
     AAssetManager* mgr = AAssetManager_fromJava(env, assetManager);
     auto infected = scanForViruses(files, mgr);
-    // Build JSON result
     std::stringstream result;
     result << "[";
     for (size_t i = 0; i < infected.size(); ++i) {

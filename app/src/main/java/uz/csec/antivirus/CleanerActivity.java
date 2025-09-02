@@ -1,17 +1,27 @@
 package uz.csec.antivirus;
 
-import android.os.Bundle;
-import androidx.appcompat.app.AppCompatActivity;
 import android.animation.ValueAnimator;
+import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
+import android.content.pm.ApplicationInfo;
+import android.content.pm.PackageManager;
+import android.database.Cursor;
+import android.net.Uri;
+import android.os.BatteryManager;
+import android.os.Build;
+import android.os.Bundle;
+import android.os.Environment;
+import android.os.StatFs;
+import android.os.storage.StorageManager;
+import android.provider.MediaStore;
+import android.provider.Settings;
+import android.util.Log;
 import android.view.View;
 import android.widget.ImageView;
-import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
-import android.Manifest;
-import android.content.pm.PackageManager;
-import android.os.Build;
-import android.os.Environment;
+import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.core.view.WindowInsetsControllerCompat;
@@ -19,36 +29,25 @@ import androidx.core.view.WindowInsetsControllerCompat;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
-import android.os.StatFs;
-import android.app.ActivityManager;
-import android.content.Context;
-import android.content.Intent;
-import android.content.IntentFilter;
-import android.os.BatteryManager;
-import android.app.usage.StorageStats;
-import android.app.usage.StorageStatsManager;
-import android.content.pm.ApplicationInfo;
 import java.util.UUID;
 import android.app.AppOpsManager;
-import android.provider.Settings;
-import android.util.Log;
-import android.os.storage.StorageManager;
-import uz.csec.antivirus.FileScanHelper;
-import android.database.Cursor;
-import android.net.Uri;
+import android.app.usage.StorageStats;
+import android.app.usage.StorageStatsManager;
+import android.app.ActivityManager;
 import android.content.ContentResolver;
 import android.content.ContentUris;
-import android.provider.MediaStore;
+import android.Manifest;
 
 public class CleanerActivity extends AppCompatActivity {
     private static final int REQUEST_STORAGE = 1001;
-    
+
     private List<CleanerItem> cleanerItems;
     private TextView tvCleanableSize, tvCleanableUnit, tvCleanableDesc;
     private long[] itemSizes;
     private String[] itemLabels;
     private int[] itemLayoutIds;
     private boolean[] itemSelected;
+    private int[] segmentColors = {0xFFFF0000, 0xFF00FF00, 0xFFFFFF00, 0xFF0000FF};
 
     private static class CleanerItem {
         View view;
@@ -56,7 +55,7 @@ public class CleanerActivity extends AppCompatActivity {
         long size;
         String label;
         int type;
-        
+
         CleanerItem(View view, TextView sizeText, long size, String label, int type) {
             this.view = view;
             this.sizeText = sizeText;
@@ -102,38 +101,26 @@ public class CleanerActivity extends AppCompatActivity {
             return;
         }
 
-
-
-
-
-
-
+        // Hajmlarni hisoblash
         long bigFiles = getBigFilesSize(Environment.getExternalStorageDirectory(), 100 * 1024 * 1024);
         long audioVideo = getMediaFilesSize();
         long apks = getApkFilesSize(Environment.getExternalStorageDirectory());
         long junk = getAppCacheSize() + getDownloadFolderSize();
-        long total = bigFiles + audioVideo + apks + junk;
 
         itemSizes = new long[]{bigFiles, audioVideo, apks, junk};
         itemLabels = new String[]{getString(R.string.big_files), getString(R.string.audio_and_video), getString(R.string.apps_delete), getString(R.string.cash_memory)};
         itemLayoutIds = new int[]{R.id.item1, R.id.item2, R.id.item3, R.id.item4};
-        itemSelected = new boolean[]{false, false, false, false};
-
-        StatFs stat = new StatFs(Environment.getDataDirectory().getPath());
-        long free = (long) stat.getAvailableBlocksLong() * stat.getBlockSizeLong();
-        String freeSpaceStr = formatSize(free);
-        float cleanablePercent = (free > 0) ? (total * 1f / free) : 0f;
-        if (cleanablePercent > 1f) cleanablePercent = 1f;
+        itemSelected = new boolean[]{true, true, true, true};
 
         CleanerCircularProgressView mainProgress = findViewById(R.id.cleanerMainProgress);
-        mainProgress.animateBgProgress(1f);
-        mainProgress.animateProgress(cleanablePercent);
-
-        String totalStr = formatSize(total);
-        tvCleanableSize.setText(totalStr.replaceAll("[^0-9.,]", "").trim());
-        tvCleanableUnit.setText(getUnitFromFormattedSize(totalStr));
 
         initializeCleanerItems();
+
+        updateTotalDisplay();
+        updateProgressSegments(mainProgress);
+        mainProgress.animateBgProgress(1f);
+        mainProgress.animateProgress(1f);
+        updateCleanButtonState();
 
         tvCleanableDesc.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -146,23 +133,23 @@ public class CleanerActivity extends AppCompatActivity {
     private void initializeCleanerItems() {
         cleanerItems = new ArrayList<>();
         int[] iconResIds = {R.drawable.ic_big_files, R.drawable.ic_disk, R.drawable.ic_phone, R.drawable.ic_cleaner};
-        
+
         for (int i = 0; i < itemLayoutIds.length; i++) {
             View itemView = findViewById(itemLayoutIds[i]);
             if (itemView != null) {
                 TextView sizeText = itemView.findViewById(R.id.itemSize);
                 ImageView icon = itemView.findViewById(R.id.itemIcon);
                 TextView label = itemView.findViewById(R.id.itemLabel);
-                
+
                 if (sizeText != null) sizeText.setText(formatSize(itemSizes[i]));
                 if (icon != null) icon.setImageResource(iconResIds[i]);
                 if (label != null) label.setText(itemLabels[i]);
-                
+
                 CleanerItem item = new CleanerItem(itemView, sizeText, itemSizes[i], itemLabels[i], i);
                 cleanerItems.add(item);
-                
+
                 updateItemBackground(item, itemSelected[i]);
-                
+
                 itemView.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
@@ -176,21 +163,56 @@ public class CleanerActivity extends AppCompatActivity {
     private void toggleItemSelection(CleanerItem item) {
         itemSelected[item.type] = !itemSelected[item.type];
         updateItemBackground(item, itemSelected[item.type]);
-        updateTotalSize();
+        updateTotalDisplay();
+        CleanerCircularProgressView mainProgress = findViewById(R.id.cleanerMainProgress);
+        updateProgressSegments(mainProgress);
+        mainProgress.animateBgProgress(1f);
+        mainProgress.animateProgress(1f);
         updateCleanButtonState();
     }
 
-    private void updateTotalSize() {
-        long totalSelected = 0;
+    private void updateTotalDisplay() {
+        long selectedTotal = 0;
         for (int i = 0; i < itemSizes.length; i++) {
             if (itemSelected[i]) {
-                totalSelected += itemSizes[i];
+                selectedTotal += itemSizes[i];
             }
         }
-        
-        String totalStr = formatSize(totalSelected);
+
+        String totalStr = formatSize(selectedTotal);
         tvCleanableSize.setText(totalStr.replaceAll("[^0-9.,]", "").trim());
         tvCleanableUnit.setText(getUnitFromFormattedSize(totalStr));
+    }
+
+    private void updateProgressSegments(CleanerCircularProgressView mainProgress) {
+        long selectedTotal = 0;
+        for (int i = 0; i < itemSizes.length; i++) {
+            if (itemSelected[i]) {
+                selectedTotal += itemSizes[i];
+            }
+        }
+
+        ArrayList<Float> selPercent = new ArrayList<>();
+        ArrayList<Integer> selColors = new ArrayList<>();
+
+        if (selectedTotal > 0) {
+            for (int i = 0; i < itemSizes.length; i++) {
+                if (itemSelected[i] && itemSizes[i] > 0) {
+                    float percent = (float) itemSizes[i] / selectedTotal;
+                    selPercent.add(percent);
+                    selColors.add(segmentColors[i]);
+                }
+            }
+        }
+
+        float[] percentages = new float[selPercent.size()];
+        int[] colors = new int[selColors.size()];
+        for (int j = 0; j < selPercent.size(); j++) {
+            percentages[j] = selPercent.get(j);
+            colors[j] = selColors.get(j);
+        }
+
+        mainProgress.setSegments(percentages, colors);
     }
 
     private void updateItemBackground(CleanerItem item, boolean isSelected) {
@@ -199,7 +221,7 @@ public class CleanerActivity extends AppCompatActivity {
         } else {
             item.view.setBackgroundResource(R.drawable.item_cleaner_bg);
         }
-        
+
         int paddingHorizontal = (int) (20 * getResources().getDisplayMetrics().density);
         item.view.setPadding(paddingHorizontal, item.view.getPaddingTop(), paddingHorizontal, item.view.getPaddingBottom());
     }
@@ -212,7 +234,7 @@ public class CleanerActivity extends AppCompatActivity {
                 break;
             }
         }
-        
+
         if (hasSelection) {
             tvCleanableDesc.setText(getString(R.string.cleaner));
             tvCleanableDesc.setTextColor(getResources().getColor(android.R.color.white));
@@ -248,14 +270,14 @@ public class CleanerActivity extends AppCompatActivity {
                 break;
             }
         }
-        
+
         if (!hasSelection) {
             Toast.makeText(this, "Hech qanday element tanlanmagan", Toast.LENGTH_SHORT).show();
             return;
         }
-        
+
         long cleanedSize = 0;
-        
+
         for (int i = 0; i < itemSelected.length; i++) {
             if (itemSelected[i]) {
                 switch (i) {
@@ -274,9 +296,23 @@ public class CleanerActivity extends AppCompatActivity {
                 }
             }
         }
-        
+
+        long bigFiles = getBigFilesSize(Environment.getExternalStorageDirectory(), 100 * 1024 * 1024);
+        long audioVideo = getMediaFilesSize();
+        long apks = getApkFilesSize(Environment.getExternalStorageDirectory());
+        long junk = getAppCacheSize() + getDownloadFolderSize();
+
+        itemSizes[0] = bigFiles;
+        itemSizes[1] = audioVideo;
+        itemSizes[2] = apks;
+        itemSizes[3] = junk;
+
         updateAfterCleanup(cleanedSize);
-        
+
+        CleanerCircularProgressView mainProgress = findViewById(R.id.cleanerMainProgress);
+        updateTotalDisplay();
+        updateProgressSegments(mainProgress);
+
         Toast.makeText(this, formatSize(cleanedSize) + " tozalandi", Toast.LENGTH_LONG).show();
     }
 
@@ -285,7 +321,6 @@ public class CleanerActivity extends AppCompatActivity {
         File dir = Environment.getExternalStorageDirectory();
         cleanBigFilesRecursive(this, dir, 100 * 1024 * 1024, cleanedSizeHolder);
         long cleaned = cleanedSizeHolder[0];
-        itemSizes[0] = 0;
         return cleaned;
     }
 
@@ -310,14 +345,13 @@ public class CleanerActivity extends AppCompatActivity {
     private long cleanMediaFiles() {
         long cleanedSize = 0;
         File[] mediaDirs = new File[] {
-            Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MUSIC),
-            Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MOVIES),
-            Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES)
+                Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MUSIC),
+                Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MOVIES),
+                Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES)
         };
         for (File dir : mediaDirs) {
             cleanedSize += cleanAllFilesInDir(this, dir);
         }
-        itemSizes[1] = 0;
         return cleanedSize;
     }
 
@@ -325,7 +359,6 @@ public class CleanerActivity extends AppCompatActivity {
         long cleanedSize = 0;
         File dir = Environment.getExternalStorageDirectory();
         cleanedSize += cleanApkFilesRecursive(this, dir);
-        itemSizes[2] = 0;
         return cleanedSize;
     }
 
@@ -342,9 +375,7 @@ public class CleanerActivity extends AppCompatActivity {
                         }
                     } else if (file.isDirectory()) {
                         cleaned += cleanAllFilesInDir(context, file);
-                        // Optionally try to remove empty directory
                         if (file.list() != null && file.list().length == 0) {
-                            // ignore result, just best-effort
                             deleteFileCompat(file);
                         }
                     }
@@ -377,17 +408,13 @@ public class CleanerActivity extends AppCompatActivity {
     private long cleanJunkFiles() {
         long cleanedSize = 0;
         try {
-            // App caches
             cleanedSize += deleteDirectoryContents(this, getCacheDir());
             cleanedSize += deleteDirectoryContents(this, getExternalCacheDir());
-
-            // Downloads folder
             File downloads = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS);
             cleanedSize += deleteDirectoryContents(this, downloads);
         } catch (Exception e) {
             Log.e("CleanerActivity", "Error cleaning junk files", e);
         }
-        itemSizes[3] = 0;
         return cleanedSize;
     }
 
@@ -418,55 +445,15 @@ public class CleanerActivity extends AppCompatActivity {
         for (int i = 0; i < itemSelected.length; i++) {
             itemSelected[i] = true;
         }
-        
+
         for (int i = 0; i < cleanerItems.size(); i++) {
             CleanerItem item = cleanerItems.get(i);
             updateItemBackground(item, true);
-            
             item.size = itemSizes[i];
             item.sizeText.setText(formatSize(itemSizes[i]));
         }
-        
-        updateTotalSize();
+
         updateCleanButtonState();
-    }
-
-    private void animateProgressBar(ProgressBar progressBar, int to, int duration) {
-        ValueAnimator animator = ValueAnimator.ofInt(0, to);
-        animator.setDuration(duration);
-        animator.addUpdateListener(animation -> {
-            progressBar.setProgress((int) animation.getAnimatedValue());
-        });
-        animator.start();
-    }
-
-    private void animateBackgroundBar(ProgressBar progressBar, int duration) {
-        ValueAnimator animator = ValueAnimator.ofInt(0, 100);
-        animator.setDuration(duration);
-        animator.addUpdateListener(animation -> {
-            progressBar.setProgress((int) animation.getAnimatedValue());
-        });
-        animator.start();
-    }
-
-    private void animateTextViewNumber(TextView textView, float start, float end, String format, int duration) {
-        ValueAnimator animator = ValueAnimator.ofFloat(start, end);
-        animator.setDuration(duration);
-        animator.addUpdateListener(animation -> {
-            float value = (float) animation.getAnimatedValue();
-            textView.setText(String.format(format, value));
-        });
-        animator.start();
-    }
-
-    private void animatePercentText(TextView textView, int start, int end, String format, int duration) {
-        ValueAnimator animator = ValueAnimator.ofInt(start, end);
-        animator.setDuration(duration);
-        animator.addUpdateListener(animation -> {
-            int value = (int) animation.getAnimatedValue();
-            textView.setText(String.format(format, value));
-        });
-        animator.start();
     }
 
     private boolean hasStoragePermission() {
@@ -591,6 +578,7 @@ public class CleanerActivity extends AppCompatActivity {
     }
 
     private String formatSize(long size) {
+        if (size == 0) return "0 B";
         float kb = size / 1024f;
         float mb = kb / 1024f;
         float gb = mb / 1024f;
@@ -598,68 +586,6 @@ public class CleanerActivity extends AppCompatActivity {
         if (mb >= 1) return String.format("%.2f MB", mb);
         if (kb >= 1) return String.format("%.2f KB", kb);
         return size + " B";
-    }
-
-    private int getStoragePercent() {
-        StatFs stat = new StatFs(Environment.getDataDirectory().getPath());
-        long total = (long) stat.getBlockCountLong() * stat.getBlockSizeLong();
-        long free = (long) stat.getAvailableBlocksLong() * stat.getBlockSizeLong();
-        long used = total - free;
-        if (total == 0) return 0;
-        return (int) (used * 100 / total);
-    }
-
-    private int getRamPercent() {
-        ActivityManager.MemoryInfo mi = new ActivityManager.MemoryInfo();
-        ActivityManager activityManager = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
-        activityManager.getMemoryInfo(mi);
-        long total = mi.totalMem;
-        long avail = mi.availMem;
-        long used = total - avail;
-        if (total == 0) return 0;
-        return (int) (used * 100 / total);
-    }
-
-    private int getBatteryPercent() {
-        IntentFilter ifilter = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);
-        Intent batteryStatus = registerReceiver(null, ifilter);
-        int level = 0, scale = 100;
-        if (batteryStatus != null) {
-            level = batteryStatus.getIntExtra(BatteryManager.EXTRA_LEVEL, -1);
-            scale = batteryStatus.getIntExtra(BatteryManager.EXTRA_SCALE, 100);
-        }
-        if (scale == 0) return 0;
-        return (int) (level * 100 / (float) scale);
-    }
-
-    private int getAppsStoragePercent() {
-        try {
-            StatFs stat = new StatFs(Environment.getDataDirectory().getPath());
-            long total = (long) stat.getBlockCountLong() * stat.getBlockSizeLong();
-            long free = (long) stat.getAvailableBlocksLong() * stat.getBlockSizeLong();
-            long used = total - free;
-            long apps = 0;
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                StorageStatsManager storageStatsManager = (StorageStatsManager) getSystemService(Context.STORAGE_STATS_SERVICE);
-                PackageManager pm = getPackageManager();
-                List<ApplicationInfo> packages = pm.getInstalledApplications(0);
-                UUID uuid = StorageManager.UUID_DEFAULT;
-                for (ApplicationInfo appInfo : packages) {
-                    try {
-                        StorageStats stats = storageStatsManager.queryStatsForUid(uuid, appInfo.uid);
-                        long appSize = stats.getAppBytes() + stats.getDataBytes() + stats.getCacheBytes();
-                        Log.d("APP_SIZE", appInfo.packageName + ": " + appSize);
-                        apps += appSize;
-                    } catch (Exception ignored) {}
-                }
-            } else {
-                apps = getApkFilesSize(Environment.getExternalStorageDirectory());
-            }
-            if (used == 0) return 0;
-            return (int) (apps * 100 / used);
-        } catch (Exception e) {
-            return 0;
-        }
     }
 
     private String getUnitFromFormattedSize(String formatted) {
@@ -670,7 +596,6 @@ public class CleanerActivity extends AppCompatActivity {
         return "";
     }
 
-    // Robust deletion that works on Android 10+
     private boolean deleteFileCompat(File file) {
         if (file == null) return false;
         if (!file.exists()) return true;
@@ -770,4 +695,4 @@ public class CleanerActivity extends AppCompatActivity {
         if (idx >= 0) return c.getString(idx);
         return null;
     }
-} 
+}
