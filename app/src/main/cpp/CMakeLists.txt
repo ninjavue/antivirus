@@ -10,6 +10,7 @@ add_library(${CMAKE_PROJECT_NAME} SHARED
         native/security.cpp
         native/files.cpp
         native/checker.cpp
+        native/graph.cpp
 )
 
 

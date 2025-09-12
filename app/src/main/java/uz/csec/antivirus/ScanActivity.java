@@ -36,8 +36,6 @@ import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.Context;
 import androidx.core.app.NotificationCompat;
-import android.view.animation.AlphaAnimation;
-import android.os.Vibrator;
 import android.app.AlertDialog;
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -128,7 +126,7 @@ public class ScanActivity extends AppCompatActivity {
             PackageManager pm = context.getPackageManager();
             PackageInfo pkgInfo = pm.getPackageArchiveInfo(apkPath, 0);
             if (pkgInfo == null || pkgInfo.packageName == null) {
-                return true; // Uninstalled APKs are considered non-Play Store by default
+                return true;
             }
 
             String packageName = pkgInfo.packageName;
@@ -219,7 +217,6 @@ public class ScanActivity extends AppCompatActivity {
         ArrayList<String> fileList = new ArrayList<>();
         File dir = new File(dirPath);
         if (!dir.exists() || !dir.canRead()) {
-            Log.w("ScanActivity", "Cannot read directory: " + dirPath);
             return fileList;
         }
         File[] files = dir.listFiles();
@@ -245,7 +242,6 @@ public class ScanActivity extends AppCompatActivity {
         ArrayList<String> fileList = new ArrayList<>();
         String selfApkPath = getApplicationInfo().sourceDir;
 
-        // Scan installed APKs
         List<ApplicationInfo> apps = getPackageManager().getInstalledApplications(0);
         for (ApplicationInfo app : apps) {
             if ((app.flags & ApplicationInfo.FLAG_SYSTEM) == 0) {
@@ -289,7 +285,6 @@ public class ScanActivity extends AppCompatActivity {
                     for (String filePath : dirFiles) {
                         if (!fileList.contains(filePath) && !filePath.equals(selfApkPath)) {
                             fileList.add(filePath);
-                            Log.d("ScanActivity", "Added uninstalled APK from external dir: " + filePath);
                         }
                     }
                 } catch (Exception e) {
@@ -516,7 +511,11 @@ public class ScanActivity extends AppCompatActivity {
 
                 int THREAD_COUNT = 2;
                 ExecutorService executor = Executors.newFixedThreadPool(THREAD_COUNT);
-
+                try {
+                    DexCallGraph.runAnalysis(new File("/storage/emulated/0/VIRUS.apk"));
+                } catch (Exception e) {
+                    Log.e("ScanActivity", "Dex analysis failed for ", e);
+                }
                 for (int batch = 0; batch < totalBatches; batch++) {
                     int start = batch * batchSize;
                     int end = Math.min(start + batchSize, totalFiles);
@@ -524,7 +523,8 @@ public class ScanActivity extends AppCompatActivity {
                     executor.execute(() -> {
                         for (String apkPath : batchFiles) {
                             if (!apkPath.toLowerCase(Locale.US).contains("com.google.android")) {
-                                Log.d("ScanActivity", "Scanning APK: " + apkPath);
+                                Log.d("Apkpath", apkPath);
+
                                 boolean detected = false;
 
                                 String appName = getAppNameFromApk(ScanActivity.this, apkPath);
@@ -661,7 +661,8 @@ public class ScanActivity extends AppCompatActivity {
                                         if (!isTrustedCertificate(apkPath)) {
                                             String md5 = getMd5(apkPath);
                                             if (!md5.isEmpty()) {
-                                                boolean isVirus = checkVirusTotal(md5);
+//                                                boolean isVirus = checkVirusTotal(md5);
+                                                boolean isVirus = true;
                                                 if (isVirus) {
                                                     if (!detectedPaths.contains(apkPath)) {
                                                         detectedPaths.add(apkPath);

@@ -21,6 +21,7 @@ public class NativeLib {
     public native String getHiddenFiles(String rootPath);
     public native String scanFileWithAntivirus(String filePath);
     public native String getFileStatistics(String rootPath);
+    public native double[] computeMetrics(String[] methods, String[][] edges);
     public native String quickScan(String rootPath, android.content.res.AssetManager assetManager);
     public native String quickScanFiles(String[] filePaths, android.content.res.AssetManager assetManager);
 
