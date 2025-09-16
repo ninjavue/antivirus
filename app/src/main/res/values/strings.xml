@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name" translatable="false">Antivirus</string>
+    <string name="app_name" translatable="false">Zirh Analizator</string>
     <string name="optimize" translatable="false">OPTIMIZE</string>
     <string name="cleaner" translatable="false">Tozalash</string>
     <string name="antivirus" translatable="false">Antivirus</string>

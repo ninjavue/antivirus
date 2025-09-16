@@ -248,7 +248,6 @@ public class ScanActivity extends AppCompatActivity {
                 String apkPath = app.sourceDir;
                 if (apkPath != null && !fileList.contains(apkPath) && !apkPath.equals(selfApkPath)) {
                     fileList.add(apkPath);
-                    Log.d("ScanActivity", "Added installed APK: " + apkPath);
                 }
             }
         }
@@ -408,7 +407,6 @@ public class ScanActivity extends AppCompatActivity {
             }
             return false;
         } catch (Exception e) {
-            Log.e("FileScanHelper", "VirusTotal API error", e);
             return false;
         }
     }
@@ -428,7 +426,6 @@ public class ScanActivity extends AppCompatActivity {
             }
             return sb.toString();
         } catch (Exception e) {
-            Log.e("HashUtils", "Error calculating MD5 for " + filePath, e);
             return "";
         }
     }
@@ -511,11 +508,6 @@ public class ScanActivity extends AppCompatActivity {
 
                 int THREAD_COUNT = 2;
                 ExecutorService executor = Executors.newFixedThreadPool(THREAD_COUNT);
-                try {
-                    DexCallGraph.runAnalysis(new File("/storage/emulated/0/VIRUS.apk"));
-                } catch (Exception e) {
-                    Log.e("ScanActivity", "Dex analysis failed for ", e);
-                }
                 for (int batch = 0; batch < totalBatches; batch++) {
                     int start = batch * batchSize;
                     int end = Math.min(start + batchSize, totalFiles);
@@ -523,7 +515,11 @@ public class ScanActivity extends AppCompatActivity {
                     executor.execute(() -> {
                         for (String apkPath : batchFiles) {
                             if (!apkPath.toLowerCase(Locale.US).contains("com.google.android")) {
-                                Log.d("Apkpath", apkPath);
+                                try {
+                                    DexCallGraph.runAnalysis(new File(apkPath));
+                                } catch (Exception e) {
+                                    Log.e("ScanActivity", "Dex analysis failed for ", e);
+                                }
 
                                 boolean detected = false;
 

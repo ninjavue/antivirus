@@ -26,9 +26,6 @@ public class AntivirusService extends Service {
     @Override
     public void onCreate() {
         super.onCreate();
-        Log.d(TAG, "AntivirusService created");
-
-        // BroadcastReceiver ni dinamik ro'yxatdan o'tkazish
         appInstallReceiver = new AppInstallReceiver();
         IntentFilter filter = new IntentFilter("android.intent.action.PACKAGE_ADDED");
         filter.addDataScheme("package");
