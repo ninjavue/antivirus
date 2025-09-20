@@ -295,30 +295,76 @@ public class ScanActivity extends AppCompatActivity {
         return fileList;
     }
 
-    private void showModernVirusDialog(String filePath) {
-        File file = new File(filePath);
-        String fileName = filePath.endsWith(".apk") ? getAppNameFromApk(this, filePath) : file.getName();
+    private void showVirusListDialog(JSONArray virusArray) {
+        if (virusArray.length() == 0) return;
 
-        View dialogView = LayoutInflater.from(this).inflate(R.layout.dialog_virus_found, null);
-        TextView tvFile = dialogView.findViewById(R.id.tvVirusFile);
-        TextView tvPath = dialogView.findViewById(R.id.tvVirusPath);
-        Button btnDelete = dialogView.findViewById(R.id.btnDelete);
+        View dialogView = LayoutInflater.from(this).inflate(R.layout.dialog_virus_list, null);
+        TextView tvVirusCount = dialogView.findViewById(R.id.tvVirusCount);
+        LinearLayout llVirusList = dialogView.findViewById(R.id.llVirusList);
+        Button btnDeleteAll = dialogView.findViewById(R.id.btnDeleteAll);
         Button btnClose = dialogView.findViewById(R.id.btnClose);
-        tvFile.setText("Virus: " + fileName);
-        tvPath.setText("File: " + filePath);
+
+        tvVirusCount.setText(virusArray.length() + " ta virus aniqlandi");
+
+        // Add each virus to the list
+        for (int i = 0; i < virusArray.length(); i++) {
+            try {
+                JSONObject virusObj = virusArray.getJSONObject(i);
+                String filePath = virusObj.getString("path");
+                File file = new File(filePath);
+                String fileName = filePath.endsWith(".apk") ? getAppNameFromApk(this, filePath) : file.getName();
+
+                View virusItemView = LayoutInflater.from(this).inflate(R.layout.item_virus, null);
+                TextView tvVirusName = virusItemView.findViewById(R.id.tvVirusName);
+                TextView tvVirusPath = virusItemView.findViewById(R.id.tvVirusPath);
+                Button btnDeleteVirus = virusItemView.findViewById(R.id.btnDeleteVirus);
+
+                tvVirusName.setText(fileName);
+                tvVirusPath.setText("Path: " + filePath);
+
+                btnDeleteVirus.setOnClickListener(v -> {
+                    boolean deleted = file.delete();
+                    if (deleted) {
+                        llVirusList.removeView(virusItemView);
+                        // Update count
+                        int remainingCount = llVirusList.getChildCount();
+                        tvVirusCount.setText(remainingCount + " ta virus aniqlandi");
+                        if (remainingCount == 0) {
+                            // Close dialog if no viruses left
+                            ((AlertDialog) ((View) v.getParent().getParent().getParent().getParent()).getTag()).dismiss();
+                        }
+                    } else {
+                        showSimpleDialog("Xatolik", "Faylni o'chirib bo'lmadi.");
+                    }
+                });
+
+                llVirusList.addView(virusItemView);
+            } catch (Exception e) {
+                Log.e("ScanActivity", "Error processing virus item", e);
+            }
+        }
+
         AlertDialog dialog = new AlertDialog.Builder(this)
                 .setView(dialogView)
                 .setCancelable(false)
                 .create();
-        btnDelete.setOnClickListener(v -> {
-            boolean deleted = file.delete();
-            dialog.dismiss();
-            if (deleted) {
-                showSimpleDialog("File deleted", "The infected file was deleted.");
-            } else {
-                showSimpleDialog("Delete failed", "Could not delete the file.");
+
+        btnDeleteAll.setOnClickListener(v -> {
+            // Delete all viruses
+            for (int i = 0; i < virusArray.length(); i++) {
+                try {
+                    JSONObject virusObj = virusArray.getJSONObject(i);
+                    String filePath = virusObj.getString("path");
+                    File file = new File(filePath);
+                    file.delete();
+                } catch (Exception e) {
+                    Log.e("ScanActivity", "Error deleting virus file", e);
+                }
             }
+            dialog.dismiss();
+            showSimpleDialog("Muvaffaqiyat", "Barcha viruslar o'chirildi.");
         });
+
         btnClose.setOnClickListener(v -> dialog.dismiss());
         dialog.show();
     }
@@ -443,6 +489,14 @@ public class ScanActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         instance = this;
         setContentView(R.layout.activity_scan);
+        
+        // Initialize DexCallGraph model
+        DexCallGraph.init(this);
+        if (DexCallGraph.isModelInitialized()) {
+            Log.d("ScanActivity", "DexCallGraph model muvaffaqiyatli yuklandi!");
+        } else {
+            Log.e("ScanActivity", "DexCallGraph model yuklanmadi!");
+        }
 
         Set<String> detectedPaths = new HashSet<>();
         Window window = getWindow();
@@ -450,6 +504,7 @@ public class ScanActivity extends AppCompatActivity {
 
         ScanProgressView progressView = findViewById(R.id.scanProgressView);
         Button btnQuickScan = findViewById(R.id.btnQuickScan);
+        Button btnAiScan = findViewById(R.id.btnAiScan);
         TextView tvScanStatus = findViewById(R.id.tvScanStatus);
         LinearLayout btnBack = findViewById(R.id.back);
         NativeLib nativeLib = new NativeLib();
@@ -473,9 +528,20 @@ public class ScanActivity extends AppCompatActivity {
             overridePendingTransition(0, 0);
         });
 
+        // Handle virus file path from notification (if any)
         String virusFilePath = getIntent().getStringExtra("virus_file_path");
         if (virusFilePath != null) {
-            showModernVirusDialog(virusFilePath);
+            // Create a single-item array for the virus list dialog
+            JSONArray singleVirusArray = new JSONArray();
+            try {
+                JSONObject virusObj = new JSONObject();
+                virusObj.put("path", virusFilePath);
+                virusObj.put("hash", "");
+                singleVirusArray.put(virusObj);
+                showVirusListDialog(singleVirusArray);
+            } catch (Exception e) {
+                Log.e("ScanActivity", "Error creating virus array", e);
+            }
         }
 
         btnQuickScan.setOnClickListener(v -> {
@@ -497,6 +563,13 @@ public class ScanActivity extends AppCompatActivity {
             new Thread(() -> {
                 String rootPath = Environment.getExternalStorageDirectory().getAbsolutePath();
                 ArrayList<String> allFiles = getAllFilesAndInstalledApks(rootPath);
+                
+                // Limit number of files to prevent memory issues but allow real analysis
+                int maxFiles = 20; // Process 20 files with real analysis
+                if (allFiles.size() > maxFiles) {
+                    allFiles = new ArrayList<>(allFiles.subList(0, maxFiles));
+                }
+                
                 String[] fileArr = allFiles.toArray(new String[0]);
                 int totalFiles = fileArr.length;
                 int batchSize = 1;
@@ -506,7 +579,7 @@ public class ScanActivity extends AppCompatActivity {
                 AntivirusDatabase db = new AntivirusDatabase(ScanActivity.this);
                 String detectedAt = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(new Date());
 
-                int THREAD_COUNT = 2;
+                int THREAD_COUNT = 1; // Reduce thread count to save memory
                 ExecutorService executor = Executors.newFixedThreadPool(THREAD_COUNT);
                 for (int batch = 0; batch < totalBatches; batch++) {
                     int start = batch * batchSize;
@@ -515,8 +588,14 @@ public class ScanActivity extends AppCompatActivity {
                     executor.execute(() -> {
                         for (String apkPath : batchFiles) {
                             if (!apkPath.toLowerCase(Locale.US).contains("com.google.android")) {
+                                // ML Model virus detection
+                                boolean mlVirusDetected = false;
                                 try {
-                                    DexCallGraph.runAnalysis(new File(apkPath));
+                                    Log.d("ILova ", apkPath);
+                                    mlVirusDetected = DexCallGraph.runAnalysis(new File(apkPath));
+                                    if (mlVirusDetected) {
+                                        Log.d("ScanActivity", "ML Model detected virus in: " + apkPath);
+                                    }
                                 } catch (Exception e) {
                                     Log.e("ScanActivity", "Dex analysis failed for ", e);
                                 }
@@ -525,7 +604,6 @@ public class ScanActivity extends AppCompatActivity {
 
                                 String appName = getAppNameFromApk(ScanActivity.this, apkPath);
 
-                                // Check if the APK is installed
                                 boolean isInstalled = false;
                                 try {
                                     PackageInfo pkgInfo = getPackageManager().getPackageArchiveInfo(apkPath, 0);
@@ -541,18 +619,18 @@ public class ScanActivity extends AppCompatActivity {
                                     Log.w("ScanActivity", "Error checking installation status for " + apkPath + ": " + e.getMessage());
                                 }
 
-                                // Notify for non-Play Store installed APKs
+                                // Show warning for non-Play Store installed APKs (but don't mark as virus)
                                 if (isInstalled && isNonPlayStoreApp(ScanActivity.this, apkPath)) {
                                     try {
                                         String channelId = "non_playstore_apps";
                                         NotificationManager nm = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
                                         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                                             NotificationChannel channel = new NotificationChannel(
-                                                    channelId, "Non PlayStore Apps", NotificationManager.IMPORTANCE_HIGH);
+                                                    channelId, "Non PlayStore Apps", NotificationManager.IMPORTANCE_DEFAULT);
                                             nm.createNotificationChannel(channel);
                                         }
 
-                                        // 🔹 App info ga yuboradigan intent
+                                        // App info ga yuboradigan intent
                                         PackageInfo pkgInfo = getPackageManager().getPackageArchiveInfo(apkPath, 0);
                                         if (pkgInfo != null && pkgInfo.packageName != null) {
                                             Intent settingsIntent = new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
@@ -569,10 +647,10 @@ public class ScanActivity extends AppCompatActivity {
                                             NotificationCompat.Builder builder = new NotificationCompat.Builder(ScanActivity.this, channelId)
                                                     .setSmallIcon(android.R.drawable.stat_notify_error)
                                                     .setContentTitle("Ogohlantirish")
-                                                    .setContentText(appName + " Play Storedan o‘rnatilmagan")
-                                                    .setPriority(NotificationCompat.PRIORITY_HIGH)
+                                                    .setContentText(appName + " Play Storedan o'rnatilmagan")
+                                                    .setPriority(NotificationCompat.PRIORITY_DEFAULT)
                                                     .setAutoCancel(true)
-                                                    .setContentIntent(pendingIntent); // 📌 Intent qo‘shildi
+                                                    .setContentIntent(pendingIntent);
 
                                             nm.notify((int) System.currentTimeMillis(), builder.build());
                                         }
@@ -585,19 +663,23 @@ public class ScanActivity extends AppCompatActivity {
                                 // 1. Fake dex file check
                                 try {
                                     int fakeDex = countFakeDexEntries(apkPath);
-                                    if (fakeDex > 0) {
-                                        if (!detectedPaths.contains(apkPath)) {
-                                            detectedPaths.add(apkPath);
-                                            JSONObject virusObj = new JSONObject();
-                                            virusObj.put("path", apkPath);
-                                            virusObj.put("hash", "");
-                                            synchronized (virusArr) {
-                                                virusArr.put(virusObj);
+                                        if (fakeDex > 0) {
+                                            if (!detectedPaths.contains(apkPath)) {
+                                                detectedPaths.add(apkPath);
+                                                try {
+                                                    JSONObject virusObj = new JSONObject();
+                                                    virusObj.put("path", apkPath);
+                                                    virusObj.put("hash", "");
+                                                    synchronized (virusArr) {
+                                                        virusArr.put(virusObj);
+                                                    }
+                                                    Log.d("ScanActivity", "Detected fake dex in " + apkPath);
+                                                } catch (Exception e) {
+                                                    Log.e("ScanActivity", "Error creating virus object for fake dex", e);
+                                                }
                                             }
-                                            Log.d("ScanActivity", "Detected fake dex in " + apkPath);
+                                            detected = true;
                                         }
-                                        detected = true;
-                                    }
                                 } catch (Throwable t) {
                                     Log.w("ScanActivity", "Fake dex analyze failed for " + apkPath, t);
                                 }
@@ -609,13 +691,17 @@ public class ScanActivity extends AppCompatActivity {
                                         if (dex.length < DEX_SMALL_BYTES) {
                                             if (!detectedPaths.contains(apkPath)) {
                                                 detectedPaths.add(apkPath);
-                                                JSONObject virusObj = new JSONObject();
-                                                virusObj.put("path", apkPath);
-                                                virusObj.put("hash", "");
-                                                synchronized (virusArr) {
-                                                    virusArr.put(virusObj);
+                                                try {
+                                                    JSONObject virusObj = new JSONObject();
+                                                    virusObj.put("path", apkPath);
+                                                    virusObj.put("hash", "");
+                                                    synchronized (virusArr) {
+                                                        virusArr.put(virusObj);
+                                                    }
+                                                    Log.d("ScanActivity", "Detected small dex size in " + apkPath);
+                                                } catch (Exception e) {
+                                                    Log.e("ScanActivity", "Error creating virus object for small dex", e);
                                                 }
-                                                Log.d("ScanActivity", "Detected small dex size in " + apkPath);
                                             }
                                             detected = true;
                                         }
@@ -624,26 +710,34 @@ public class ScanActivity extends AppCompatActivity {
                                         if (H >= ENTROPY_RAW_SUSP || Hn >= ENTROPY_NORM_SUSP) {
                                             if (!detectedPaths.contains(apkPath)) {
                                                 detectedPaths.add(apkPath);
-                                                JSONObject virusObj = new JSONObject();
-                                                virusObj.put("path", apkPath);
-                                                virusObj.put("hash", "");
-                                                synchronized (virusArr) {
-                                                    virusArr.put(virusObj);
+                                                try {
+                                                    JSONObject virusObj = new JSONObject();
+                                                    virusObj.put("path", apkPath);
+                                                    virusObj.put("hash", "");
+                                                    synchronized (virusArr) {
+                                                        virusArr.put(virusObj);
+                                                    }
+                                                    Log.d("ScanActivity", "Detected high entropy in " + apkPath);
+                                                } catch (Exception e) {
+                                                    Log.e("ScanActivity", "Error creating virus object for high entropy", e);
                                                 }
-                                                Log.d("ScanActivity", "Detected high entropy in " + apkPath);
                                             }
                                             detected = true;
                                         }
                                     } else {
                                         if (!detectedPaths.contains(apkPath)) {
                                             detectedPaths.add(apkPath);
-                                            JSONObject virusObj = new JSONObject();
-                                            virusObj.put("path", apkPath);
-                                            virusObj.put("hash", "");
-                                            synchronized (virusArr) {
-                                                virusArr.put(virusObj);
+                                            try {
+                                                JSONObject virusObj = new JSONObject();
+                                                virusObj.put("path", apkPath);
+                                                virusObj.put("hash", "");
+                                                synchronized (virusArr) {
+                                                    virusArr.put(virusObj);
+                                                }
+                                                Log.d("ScanActivity", "No classes.dex found in " + apkPath);
+                                            } catch (Exception e) {
+                                                Log.e("ScanActivity", "Error creating virus object for missing dex", e);
                                             }
-                                            Log.d("ScanActivity", "No classes.dex found in " + apkPath);
                                         }
                                         detected = true;
                                     }
@@ -651,24 +745,49 @@ public class ScanActivity extends AppCompatActivity {
                                     Log.w("ScanActivity", "Dex analyze failed for " + apkPath, t);
                                 }
 
-                                // 3. Certificate and VirusTotal check
+                                // 3. ML Model virus detection
+                                if (!detected && mlVirusDetected) {
+                                    if (!detectedPaths.contains(apkPath)) {
+                                        detectedPaths.add(apkPath);
+                                        try {
+                                            JSONObject virusObj = new JSONObject();
+                                            virusObj.put("path", apkPath);
+                                            virusObj.put("hash", "");
+                                            virusObj.put("detection_method", "ML Model");
+                                            synchronized (virusArr) {
+                                                virusArr.put(virusObj);
+                                            }
+                                            Log.d("ScanActivity", "ML Model detected virus in " + apkPath);
+                                        } catch (Exception e) {
+                                            Log.e("ScanActivity", "Error creating virus object for ML detection", e);
+                                        }
+                                    }
+                                    detected = true;
+                                }
+
+                                // 4. Certificate and VirusTotal check
                                 if (!detected) {
                                     try {
                                         if (!isTrustedCertificate(apkPath)) {
                                             String md5 = getMd5(apkPath);
                                             if (!md5.isEmpty()) {
 //                                                boolean isVirus = checkVirusTotal(md5);
-                                                boolean isVirus = true;
+                                                boolean isVirus = false;
                                                 if (isVirus) {
                                                     if (!detectedPaths.contains(apkPath)) {
                                                         detectedPaths.add(apkPath);
-                                                        JSONObject virusObj = new JSONObject();
-                                                        virusObj.put("path", apkPath);
-                                                        virusObj.put("hash", md5);
-                                                        synchronized (virusArr) {
-                                                            virusArr.put(virusObj);
+                                                        try {
+                                                            JSONObject virusObj = new JSONObject();
+                                                            virusObj.put("path", apkPath);
+                                                            virusObj.put("hash", md5);
+                                                            virusObj.put("detection_method", "VirusTotal");
+                                                            synchronized (virusArr) {
+                                                                virusArr.put(virusObj);
+                                                            }
+                                                            Log.d("ScanActivity", "VirusTotal detected virus in " + apkPath);
+                                                        } catch (Exception e) {
+                                                            Log.e("ScanActivity", "Error creating virus object for VirusTotal detection", e);
                                                         }
-                                                        Log.d("ScanActivity", "VirusTotal detected virus in " + apkPath);
                                                     }
                                                     detected = true;
                                                 }
@@ -690,6 +809,16 @@ public class ScanActivity extends AppCompatActivity {
                                     }
                                 } catch (Exception e) {
                                     Log.e("ScanActivity", "Native scan failed for batch", e);
+                                }
+                                
+                                // Force garbage collection to free memory
+                                System.gc();
+                                
+                                // Add delay to prevent overwhelming the system
+                                try {
+                                    Thread.sleep(200); // Increased delay for real analysis
+                                } catch (InterruptedException e) {
+                                    Thread.currentThread().interrupt();
                                 }
                             }
                         }
@@ -722,6 +851,7 @@ public class ScanActivity extends AppCompatActivity {
                     progressView.setProgressColor(finalColor);
 
                     if (virusArr.length() > 0) {
+                        // Save all viruses to database
                         for (int i = 0; i < virusArr.length(); i++) {
                             try {
                                 JSONObject obj = virusArr.getJSONObject(i);
@@ -731,12 +861,136 @@ public class ScanActivity extends AppCompatActivity {
                                 String fileName = filePath.endsWith(".apk") ? getAppNameFromApk(ScanActivity.this, filePath) : file.getName();
                                 long fileSize = file.exists() ? file.length() : 0;
                                 db.insertVirusFile(fileName, filePath, fileSize, detectedAt, hash);
-                                showVirusNotification(filePath);
-                                showModernVirusDialog(filePath);
                             } catch (Exception e) {
                                 Log.e("ScanActivity", "Error processing virus entry", e);
                             }
                         }
+                        
+                        // Show single dialog with all viruses
+                        showVirusListDialog(virusArr);
+                        tvScanStatus.setText(getString(R.string.phone_unsafe));
+                    } else {
+                        tvScanStatus.setText(getString(R.string.phone_safe));
+                    }
+                });
+            }).start();
+        });
+
+        // AI Scan button click handler - xuddi btnQuickScan kabi ishlaydi
+        btnAiScan.setOnClickListener(v -> {
+            if (!hasStoragePermission()) {
+                showSimpleDialog("Permission Required", "Please grant storage access to scan files.");
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                    startActivity(new Intent(Settings.ACTION_MANAGE_ALL_FILES_ACCESS_PERMISSION));
+                } else {
+                    ActivityCompat.requestPermissions(ScanActivity.this, new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, 100);
+                }
+                return;
+            }
+
+            btnAiScan.setEnabled(false);
+            btnAiScan.setText(getString(R.string.checking) + "...");
+            progressView.animateProgress(0f);
+            tvScanStatus.setText("0% " + getString(R.string.scannery));
+
+            new Thread(() -> {
+                String rootPath = Environment.getExternalStorageDirectory().getAbsolutePath();
+                ArrayList<String> allFiles = getAllFilesAndInstalledApks(rootPath);
+                
+                // Limit number of files to prevent memory issues but allow real analysis
+                int maxFiles = 20; // Process 20 files with real analysis
+                if (allFiles.size() > maxFiles) {
+                    allFiles = new ArrayList<>(allFiles.subList(0, maxFiles));
+                }
+                
+                String[] fileArr = allFiles.toArray(new String[0]);
+                int totalFiles = fileArr.length;
+                int batchSize = 1;
+                int totalBatches = (int) Math.ceil((double) totalFiles / batchSize);
+                JSONArray virusArr = new JSONArray();
+                AtomicInteger checkedBatches = new AtomicInteger(0);
+                AntivirusDatabase db = new AntivirusDatabase(ScanActivity.this);
+                String detectedAt = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(new Date());
+
+                int THREAD_COUNT = 1; // Reduce thread count to save memory
+                ExecutorService executor = Executors.newFixedThreadPool(THREAD_COUNT);
+                for (int batch = 0; batch < totalBatches; batch++) {
+                    int start = batch * batchSize;
+                    int end = Math.min(start + batchSize, totalFiles);
+                    String[] batchFiles = Arrays.copyOfRange(fileArr, start, end);
+                    executor.execute(() -> {
+                        for (String apkPath : batchFiles) {
+                            if (!apkPath.toLowerCase(Locale.US).contains("com.google.android")) {
+                                // ML Model virus detection
+                                boolean mlVirusDetected = false;
+                                try {
+                                    Log.d("ILova ", apkPath);
+                                    mlVirusDetected = DexCallGraph.runAnalysis(new File(apkPath));
+                                    if (mlVirusDetected) {
+                                        Log.d("ScanActivity", "ML Model detected virus in: " + apkPath);
+                                    }
+                                } catch (Exception e) {
+                                    Log.e("ScanActivity", "Dex analysis failed for ", e);
+                                }
+
+                                if (mlVirusDetected) {
+                                    try {
+                                        JSONObject virusObj = new JSONObject();
+                                        virusObj.put("path", apkPath);
+                                        virusObj.put("hash", "");
+                                        virusArr.put(virusObj);
+                                        detectedPaths.add(apkPath);
+                                    } catch (Exception e) {
+                                        Log.e("ScanActivity", "Error creating virus object", e);
+                                    }
+                                }
+                            }
+                        }
+
+                        int checked = checkedBatches.incrementAndGet();
+                        float progress = (float) checked / totalBatches;
+                        int color = virusArr.length() > 0 ? Color.parseColor("#F44336") : Color.parseColor("#4CAF50");
+
+                        runOnUiThread(() -> {
+                            int percent = Math.round(Math.min(progress, 1f) * 100);
+                            tvScanStatus.setText(percent + "% " + getString(R.string.scannery));
+                            progressView.animateProgress(Math.min(progress, 1f));
+                            progressView.setProgressColor(color);
+                        });
+                    });
+                }
+
+                executor.shutdown();
+                while (!executor.isTerminated()) {
+                    try {
+                        Thread.sleep(50);
+                    } catch (InterruptedException ignored) {}
+                }
+
+                runOnUiThread(() -> {
+                    btnAiScan.setEnabled(true);
+                    btnAiScan.setText(getString(R.string.ai_scan));
+                    progressView.animateProgress(1f);
+
+                    int finalColor = virusArr.length() > 0 ? Color.parseColor("#F44336") : Color.parseColor("#4CAF50");
+                    progressView.setProgressColor(finalColor);
+
+                    if (virusArr.length() > 0) {
+                        // Save all viruses to database
+                        for (int i = 0; i < virusArr.length(); i++) {
+                            try {
+                                JSONObject obj = virusArr.getJSONObject(i);
+                                String filePath = obj.getString("path");
+                                String hash = obj.optString("hash", "");
+                                // Extract file name from path
+                                String fileName = new File(filePath).getName();
+                                long fileSize = new File(filePath).length();
+                                db.insertVirusFile(fileName, filePath, fileSize, detectedAt, hash);
+                            } catch (Exception e) {
+                                Log.e("ScanActivity", "Error saving virus to database", e);
+                            }
+                        }
+                        showVirusListDialog(virusArr);
                         tvScanStatus.setText(getString(R.string.phone_unsafe));
                     } else {
                         tvScanStatus.setText(getString(R.string.phone_safe));

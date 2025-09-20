@@ -16,6 +16,7 @@
     <string name="accessibility_service_description" translatable="false">Tashqi manbadan ilova o`rnatishni bloklash uchun xizmat</string>
     <string name="optimize_text" translatable="false">Optimallashtirish\ntaklif etiladi</string>
     <string name="check" translatable="false">Tekshirish</string>
+    <string name="ai_scan" translatable="false">AI Tekshirish</string>
     <string name="checking" translatable="false">Tekshirilmoqda</string>
     <string name="device_virus_programm" translatable="false">Qurulmadagi zararli dasturlar</string>
     <string name="device_update" translatable="false">Dastur yangilanishi</string>

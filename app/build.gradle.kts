@@ -35,8 +35,15 @@ android {
             version = "3.22.1"
         }
     }
+
+    aaptOptions {
+        noCompress("tflite")
+    }
+
     buildFeatures {
         viewBinding = true
+        mlModelBinding = true
+
     }
 }
 
@@ -62,6 +69,9 @@ dependencies {
     implementation("org.jgrapht:jgrapht-core:1.5.2")
     implementation("org.tensorflow:tensorflow-lite:2.12.0")
     implementation("org.tensorflow:tensorflow-lite-support:0.4.3")
+    implementation("org.tensorflow:tensorflow-lite-metadata:0.4.3")
+    implementation(":zirhlib-release@aar")
+    implementation(libs.tensorflow.lite.metadata)
     testImplementation(libs.junit)
     androidTestImplementation(libs.ext.junit)
     androidTestImplementation(libs.espresso.core)

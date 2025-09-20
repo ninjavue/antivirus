@@ -37,8 +37,11 @@ import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.core.view.WindowInsetsControllerCompat;
 
 import uz.csec.antivirus.CircularProgressView;
+import uz.zirh.zirhlib.ZirhMilliy;
 
 public class MainActivity extends BaseActivity {
+
+    ZirhMilliy zirh = new ZirhMilliy();
 
     private ActivityResultLauncher<Intent> filePickerLauncher;
     private String pickedFilePath;
@@ -66,7 +69,6 @@ public class MainActivity extends BaseActivity {
         setContentView(R.layout.activity_main);
         setupBottomNav();
 
-        // Request notification permission on Android 13+
         if (Build.VERSION.SDK_INT >= 33) {
             if (ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS)
                 != PackageManager.PERMISSION_GRANTED) {
@@ -135,7 +137,6 @@ public class MainActivity extends BaseActivity {
             item.setLayoutParams(params);
             grid.addView(item);
         }
-
         uz.csec.antivirus.CircularProgressView progressView = findViewById(R.id.progressGradient);
         Button btnOptimize = findViewById(R.id.btnOptimize);
 
@@ -151,7 +152,6 @@ public class MainActivity extends BaseActivity {
     }
 
 
-    
     private void startFileMonitoringServices() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             startForegroundService(new Intent(this, FileMonitorService.class));
@@ -163,6 +163,15 @@ public class MainActivity extends BaseActivity {
     @Override
     protected void onResume() {
         super.onResume();
+
+
+        boolean isEmulyator = zirh.emulyatorniAniqlash(this);
+        boolean isRoot = zirh.rootniAniqlash();
+        boolean isPlayStore = zirh.playMarketniAniqlash(this);
+        if (isEmulyator || isRoot || isPlayStore) {
+            finishAffinity();
+            System.exit(0);
+        }
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             Intent intent = new Intent();
@@ -176,9 +185,7 @@ public class MainActivity extends BaseActivity {
         }
         handleIncomingShare();
         findViewById(R.id.btnOptimize).setOnClickListener(v -> openFilePicker());
-
     }
-
     private void setupFilePicker() {
         filePickerLauncher = registerForActivityResult(
             new ActivityResultContracts.StartActivityForResult(),

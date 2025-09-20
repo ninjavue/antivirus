@@ -69,20 +69,44 @@
             android:textStyle="bold"
             android:layout_marginTop="16dp"/>
 
-        <Button
-            android:id="@+id/btnQuickScan"
-            android:layout_height="wrap_content"
+        <LinearLayout
             android:layout_width="wrap_content"
-            android:text="@string/check"
-            android:background="@drawable/btn_optimize_bg"
-            android:backgroundTint="@null"
-            android:textColor="@android:color/white"
-            android:textStyle="bold"
-            android:textSize="18sp"
-            android:paddingEnd="20dp"
-            android:paddingStart="20dp"
-            android:paddingVertical="4dp"
-            android:layout_marginTop="16dp"/>
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginTop="16dp"
+            android:gravity="center">
+            
+            <Button
+                android:id="@+id/btnQuickScan"
+                android:layout_height="wrap_content"
+                android:layout_width="wrap_content"
+                android:text="@string/check"
+                android:background="@drawable/btn_optimize_bg"
+                android:backgroundTint="@null"
+                android:textColor="@android:color/white"
+                android:textStyle="bold"
+                android:textSize="18sp"
+                android:paddingEnd="20dp"
+                android:paddingStart="20dp"
+                android:paddingVertical="4dp"
+                android:layout_marginEnd="8dp"/>
+                
+            <Button
+                android:id="@+id/btnAiScan"
+                android:layout_height="wrap_content"
+                android:layout_width="wrap_content"
+                android:text="@string/ai_scan"
+                android:background="@drawable/btn_optimize_bg"
+                android:backgroundTint="@null"
+                android:textColor="@android:color/white"
+                android:textStyle="bold"
+                android:textSize="18sp"
+                android:paddingEnd="20dp"
+                android:paddingStart="20dp"
+                android:paddingVertical="4dp"
+                android:layout_marginStart="8dp"/>
+                
+        </LinearLayout>
     </LinearLayout>
 
     <LinearLayout
