@@ -6,14 +6,17 @@
     android:layout_height="match_parent"
     android:clipChildren="false"
     android:clipToPadding="false"
-    android:background="#1b58b1">
+    android:background="#1b58b1"
+    tools:context=".CleanerActivity">
 
+    <!-- Main Content -->
     <LinearLayout
         android:id="@+id/cleaner"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:background="@drawable/bg_main">
+        android:background="@drawable/bg_main"
+        android:visibility="gone">
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -42,69 +45,73 @@
                     android:background="@android:color/transparent"
                     app:tint="#8C8A8A" />
 
-               <TextView
-                   android:id="@+id/tvTitle"
-                   android:layout_width="wrap_content"
-                   android:layout_height="wrap_content"
-                   android:text="@string/cleaner"
-                   android:textColor="#8C8A8A"
-                   android:textSize="18sp"
-                   android:textStyle="bold"/>
-           </LinearLayout>
-           <FrameLayout
-               android:id="@+id/cleanerCircleContainer"
-               android:layout_width="250dp"
-               android:layout_height="250dp"
-               android:layout_marginTop="22dp"
-               android:layout_gravity="center_horizontal"
-               android:clipChildren="false"
-               android:clipToPadding="false">
+                <TextView
+                    android:id="@+id/tvTitle"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/cleaner"
+                    android:textColor="#8C8A8A"
+                    android:textSize="18sp"
+                    android:textStyle="bold" />
+            </LinearLayout>
 
-               <uz.csec.antivirus.CleanerCircularProgressView
-                   android:id="@+id/cleanerMainProgress"
-                   android:layout_width="match_parent"
-                   android:layout_height="match_parent"
-                   />
+            <FrameLayout
+                android:id="@+id/cleanerCircleContainer"
+                android:layout_width="250dp"
+                android:layout_height="250dp"
+                android:layout_marginTop="22dp"
+                android:layout_gravity="center_horizontal"
+                android:clipChildren="false"
+                android:clipToPadding="false">
 
-               <LinearLayout
-                   android:layout_width="match_parent"
-                   android:layout_height="match_parent"
-                   android:orientation="vertical"
-                   android:gravity="center">
-                   <TextView
-                       android:id="@+id/tvCleanableSize"
-                       android:layout_width="wrap_content"
-                       android:layout_height="wrap_content"
-                       android:text="12.7"
-                       android:textColor="@color/black"
-                       android:textSize="38sp"
-                       android:textStyle="bold"/>
-                   <TextView
-                       android:id="@+id/tvCleanableUnit"
-                       android:layout_width="wrap_content"
-                       android:layout_height="wrap_content"
-                       android:text="GB"
-                       android:textColor="#7878B4"
-                       android:textSize="18sp"
-                       android:layout_marginTop="-8dp"/>
-                   <TextView
-                       android:id="@+id/tvCleanableDesc"
-                       android:layout_width="wrap_content"
-                       android:layout_height="wrap_content"
-                       android:text="@string/cleaner"
-                       android:textColor="@color/white"
-                       android:textSize="16sp"
-                       android:layout_marginTop="10dp"
-                       android:clickable="true"
-                       android:focusable="true"
-                       android:background="@drawable/btn_clean_bg"
-                       android:paddingHorizontal="12dp"
-                       android:paddingVertical="5dp"
-                       android:minWidth="80dp"
-                       android:gravity="center"/>
-               </LinearLayout>
-           </FrameLayout>
-       </LinearLayout>
+                <uz.csec.zirhanalizator.CleanerCircularProgressView
+                    android:id="@+id/cleanerMainProgress"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:orientation="vertical"
+                    android:gravity="center">
+
+                    <TextView
+                        android:id="@+id/tvCleanableSize"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="12.7"
+                        android:textColor="@color/black"
+                        android:textSize="38sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:id="@+id/tvCleanableUnit"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="GB"
+                        android:textColor="#7878B4"
+                        android:textSize="18sp"
+                        android:layout_marginTop="-8dp" />
+
+                    <TextView
+                        android:id="@+id/tvCleanableDesc"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/cleaner"
+                        android:textColor="@color/white"
+                        android:textSize="16sp"
+                        android:layout_marginTop="10dp"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:background="@drawable/btn_clean_bg"
+                        android:paddingHorizontal="12dp"
+                        android:paddingVertical="5dp"
+                        android:minWidth="80dp"
+                        android:gravity="center" />
+                </LinearLayout>
+            </FrameLayout>
+        </LinearLayout>
+
         <!-- Bottom card -->
         <LinearLayout
             android:id="@+id/cleanerBottomCard"
@@ -114,32 +121,45 @@
             android:background="@android:color/transparent"
             android:layout_marginBottom="0dp"
             android:elevation="8dp"
-            android:padding="16dp"
-            android:layout_alignParentBottom="true">
+            android:padding="16dp">
+
             <View
                 android:layout_width="100dp"
                 android:layout_height="3dp"
                 android:layout_gravity="center_horizontal"
                 android:background="#22FFFFFF"
-                android:layout_marginBottom="16dp"/>
+                android:layout_marginBottom="16dp" />
 
-
-
-            <include layout="@layout/item_cleaner_list" android:id="@+id/item1" tools:replace="android:id"/>
-            <include layout="@layout/item_cleaner_list" android:id="@+id/item2" tools:replace="android:id"/>
-            <include layout="@layout/item_cleaner_list" android:id="@+id/item3" tools:replace="android:id"/>
-            <include layout="@layout/item_cleaner_list" android:id="@+id/item4" tools:replace="android:id"/>
+            <include layout="@layout/item_cleaner_list" android:id="@+id/item1" tools:replace="android:id" />
+            <include layout="@layout/item_cleaner_list" android:id="@+id/item2" tools:replace="android:id" />
+            <include layout="@layout/item_cleaner_list" android:id="@+id/item3" tools:replace="android:id" />
+            <include layout="@layout/item_cleaner_list" android:id="@+id/item4" tools:replace="android:id" />
         </LinearLayout>
     </LinearLayout>
 
-    <TextView
+    <!-- Loading Container -->
+    <LinearLayout
+        android:id="@+id/loading_container"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Scanning..."
-        android:layout_below="@+id/cleaner"
-        android:textColor="@color/white"
-        android:paddingHorizontal="20dp"
-        android:paddingVertical="10dp"
-        />
+        android:layout_height="match_parent"
+        android:gravity="center"
+        android:orientation="vertical"
+        android:visibility="visible">
+
+        <ProgressBar
+            android:id="@+id/progressBar"
+            style="?android:attr/progressBarStyleLarge"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="16dp" />
+
+        <TextView
+            android:id="@+id/textView"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/loading"
+            android:textColor="@color/white"
+            android:textSize="16sp" />
+    </LinearLayout>
 
 </RelativeLayout>

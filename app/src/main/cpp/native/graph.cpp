@@ -11,7 +11,7 @@
 
 extern "C"
 JNIEXPORT jdoubleArray JNICALL
-Java_uz_csec_antivirus_NativeLib_computeMetrics(
+Java_uz_csec_zirhanalizator_NativeLib_computeMetrics(
         JNIEnv *env, jobject,
         jobjectArray jMethods,
         jobjectArray jEdges) {

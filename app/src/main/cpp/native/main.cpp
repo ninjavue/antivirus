@@ -11,29 +11,29 @@
 #include "checker.h"
 
 extern "C" JNIEXPORT jstring JNICALL
-Java_uz_csec_antivirus_NativeLib_getRunningApps(
+Java_uz_csec_zirhanalizator_NativeLib_getRunningApps(
         JNIEnv* env,
         jobject /* this */,
         jobject context) {
-    jclass nativeLibClass = env->FindClass("uz/csec/antivirus/NativeLib");
+    jclass nativeLibClass = env->FindClass("uz/csec/zirhanalizator/NativeLib");
     jmethodID method = env->GetStaticMethodID(nativeLibClass, "getRunningAppsJava", "(Landroid/content/Context;)Ljava/lang/String;");
     jstring result = (jstring)env->CallStaticObjectMethod(nativeLibClass, method, context);
     return result;
 }
 
 extern "C" JNIEXPORT jstring JNICALL
-Java_uz_csec_antivirus_NativeLib_getUnusedApps(
+Java_uz_csec_zirhanalizator_NativeLib_getUnusedApps(
         JNIEnv* env,
         jobject /* this */,
         jobject context) {
-    jclass nativeLibClass = env->FindClass("uz/csec/antivirus/NativeLib");
+    jclass nativeLibClass = env->FindClass("uz/csec/zirhanalizator/NativeLib");
     jmethodID method = env->GetStaticMethodID(nativeLibClass, "getUnusedAppsJava", "(Landroid/content/Context;)Ljava/lang/String;");
     jstring result = (jstring)env->CallStaticObjectMethod(nativeLibClass, method, context);
     return result;
 }
 
 extern "C" JNIEXPORT jstring JNICALL
-Java_uz_csec_antivirus_NativeLib_getAppCpuUsage(
+Java_uz_csec_zirhanalizator_NativeLib_getAppCpuUsage(
         JNIEnv* env,
         jobject /* this */) {
     pid_t pid = getpid();
@@ -59,29 +59,29 @@ Java_uz_csec_antivirus_NativeLib_getAppCpuUsage(
 }
 
 extern "C" JNIEXPORT jstring JNICALL
-Java_uz_csec_antivirus_NativeLib_getDeviceUptime(
+Java_uz_csec_zirhanalizator_NativeLib_getDeviceUptime(
         JNIEnv* env,
         jobject /* this */,
         jobject context) {
-    jclass nativeLibClass = env->FindClass("uz/csec/antivirus/NativeLib");
+    jclass nativeLibClass = env->FindClass("uz/csec/zirhanalizator/NativeLib");
     jmethodID method = env->GetStaticMethodID(nativeLibClass, "getDeviceUptimeJava", "(Landroid/content/Context;)Ljava/lang/String;");
     jstring result = (jstring)env->CallStaticObjectMethod(nativeLibClass, method, context);
     return result;
 }
 
 extern "C" JNIEXPORT jstring JNICALL
-Java_uz_csec_antivirus_NativeLib_getAppBatteryUsage(
+Java_uz_csec_zirhanalizator_NativeLib_getAppBatteryUsage(
         JNIEnv* env,
         jobject /* this */,
         jobject context) {
-    jclass nativeLibClass = env->FindClass("uz/csec/antivirus/NativeLib");
+    jclass nativeLibClass = env->FindClass("uz/csec/zirhanalizator/NativeLib");
     jmethodID method = env->GetStaticMethodID(nativeLibClass, "getAppBatteryUsageJava", "(Landroid/content/Context;)Ljava/lang/String;");
     jstring result = (jstring)env->CallStaticObjectMethod(nativeLibClass, method, context);
     return result;
 }
 
 extern "C" JNIEXPORT jstring JNICALL
-Java_uz_csec_antivirus_NativeLib_quickScanFiles(
+Java_uz_csec_zirhanalizator_NativeLib_quickScanFiles(
         JNIEnv* env,
         jobject /* this */,
         jobjectArray filePaths,

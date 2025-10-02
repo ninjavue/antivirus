@@ -1,7 +1,7 @@
 
 cmake_minimum_required(VERSION 3.22.1)
 
-project("antivirus")
+project("zirhanalizator")
 
 
 add_library(${CMAKE_PROJECT_NAME} SHARED
@@ -11,6 +11,7 @@ add_library(${CMAKE_PROJECT_NAME} SHARED
         native/files.cpp
         native/checker.cpp
         native/graph.cpp
+        native/urls.cpp
 )
 
 

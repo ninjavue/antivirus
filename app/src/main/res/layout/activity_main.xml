@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/root"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="#1b58b1"
@@ -15,7 +16,7 @@
         android:orientation="vertical"
         android:background="@drawable/bg_main"
         android:gravity="center_horizontal">
-        
+
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -23,7 +24,7 @@
             android:orientation="vertical"
             android:background="@drawable/bg_progress"
             android:gravity="center_horizontal">
-            
+
             <FrameLayout
                 android:id="@+id/progressContainer"
                 android:layout_width="280dp"
@@ -31,7 +32,7 @@
                 android:layout_marginTop="20dp"
                 android:layout_gravity="center_horizontal">
 
-                <uz.csec.antivirus.CircularProgressView
+                <uz.csec.zirhanalizator.CircularProgressView
                     android:id="@+id/progressGradient"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"

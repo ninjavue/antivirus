@@ -2,7 +2,7 @@
     <string name="app_name" translatable="false">Zirh Analizator</string>
     <string name="optimize" translatable="false">OPTIMIZE</string>
     <string name="cleaner" translatable="false">Tozalash</string>
-    <string name="antivirus" translatable="false">Antivirus</string>
+    <string name="antivirus" translatable="false">Analizator</string>
     <string name="battery" translatable="false">Quvvat</string>
     <string name="data" translatable="false">Ma\'lumot</string>
     <string name="security" translatable="false">Xavfsizlik</string>
@@ -67,4 +67,20 @@
     <string name="file_deleted_message">Bu fayl virus fayl uni o\'chiring</string>
     <string name="delete_failed_message">Faylni o\'chirishda xatolik yuz berdi\n</string>
     <string name="antivirus_text1" translatable="false">Antivirus kuzatuv rejimida</string>
+    <string name="tez_kunda" translatable="false">Tez kunda</string>
+    <string name="tez_kunda1" translatable="false">AI skan tez orada qo\'shiladi.</string>
+    <string name="large" translatable="false">100MB+ bo\'lgan fayllar topilmadi</string>
+    <string name="suspicious" translatable="false">Shubhali fayllar topilmadi</string>
+    <string name="hidden" translatable="false">Yashirin fayllar topilmadi</string>
+    <string name="default1" translatable="false">Fayllar topilmadi</string>
+    <string name="loading" translatable="false">Yuklanmoqda...</string>
+    <string name="malcuse_files_not_found" translatable="false">Zararli fayllar topilmadi</string>
+    <string name="malicious_files_detected" translatable="false">Aniqlangan zararli fayllar</string>
+    <string name="click_files" translatable="false">Faylni tekshirish uchun ustiga bosing</string>
+    <string name="checking_file" translatable="false">Checking file: </string>
+    <string name="sus_file" translatable="false">Shubhali fayl: </string>
+    <string name="reason" translatable="false">Sababi: </string>
+    <string name="safe_file" translatable="false">Fayl xavfsiz</string>
+    <string name="file_scanning" translatable="false">Fayllar skanerlanyapti...</string>
+
 </resources>

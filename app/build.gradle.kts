@@ -3,17 +3,17 @@ plugins {
 }
 
 android {
-    namespace = "uz.csec.antivirus"
+    namespace = "uz.csec.zirhanalizator"
     compileSdk = 35
 
     defaultConfig {
-        applicationId = "uz.csec.antivirus"
+        applicationId = "uz.csec.zirhanalizator"
         minSdk = 24
         targetSdk = 35
-        versionCode = 1
-        versionName = "1.0"
-
+        versionCode = 5
+        versionName = "1.0.4"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
     }
 
     buildTypes {
@@ -24,6 +24,7 @@ android {
                 "proguard-rules.pro"
             )
         }
+
     }
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
@@ -70,6 +71,7 @@ dependencies {
     implementation("org.tensorflow:tensorflow-lite:2.12.0")
     implementation("org.tensorflow:tensorflow-lite-support:0.4.3")
     implementation("org.tensorflow:tensorflow-lite-metadata:0.4.3")
+    implementation("androidx.constraintlayout:constraintlayout:2.1.4")
     implementation(":zirhlib-release@aar")
     implementation(libs.tensorflow.lite.metadata)
     testImplementation(libs.junit)

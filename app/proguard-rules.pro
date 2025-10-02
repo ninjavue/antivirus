@@ -36,7 +36,7 @@
 # Gson / Moshi
 ##############
 # Gson uchun model klasslar saqlanishi kerak:
--keep class uz.csec.antivirus.model.** { *; }
+-keep class uz.csec.zirhanalizator.model.** { *; }
 
 # Moshi ishlatsa (faqat Java):
 -keep class com.squareup.moshi.** { *; }
@@ -48,12 +48,12 @@
 -keep class com.bumptech.glide.** { *; }
 -dontwarn com.bumptech.glide.**
 # Asosiy Application yoki refleksiya orqali chaqiriladigan klasslarni saqlang
--keep class uz.csec.antivirus.MainActivity { *; }
+-keep class uz.csec.zirhanalizator.MainActivity { *; }
 
 # API interfeyslarini saqlash
 -keep public class com.example.app.api.** { public *; }
 
 
 # DeviceUtils klassini va metodlarini obfuskatsiya qilinmasin
--keep class uz.csec.antivirus.NativeLib { *; }
+-keep class uz.csec.zirhanalizator.NativeLib { *; }
 

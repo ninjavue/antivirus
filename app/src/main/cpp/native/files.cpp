@@ -121,7 +121,7 @@ void scanDirectory(const std::string& path, std::vector<FileInfo>& files, bool i
 }
 
 extern "C" JNIEXPORT jstring JNICALL
-Java_uz_csec_antivirus_NativeLib_getLargeFiles(
+Java_uz_csec_zirhanalizator_NativeLib_getLargeFiles(
         JNIEnv* env,
         jobject /* this */,
         jstring rootPath,
@@ -168,7 +168,7 @@ Java_uz_csec_antivirus_NativeLib_getLargeFiles(
 }
 
 extern "C" JNIEXPORT jstring JNICALL
-Java_uz_csec_antivirus_NativeLib_getSuspiciousFiles(
+Java_uz_csec_zirhanalizator_NativeLib_getSuspiciousFiles(
         JNIEnv* env,
         jobject /* this */,
         jstring rootPath) {
@@ -209,7 +209,7 @@ Java_uz_csec_antivirus_NativeLib_getSuspiciousFiles(
 }
 
 extern "C" JNIEXPORT jstring JNICALL
-Java_uz_csec_antivirus_NativeLib_getHiddenFiles(
+Java_uz_csec_zirhanalizator_NativeLib_getHiddenFiles(
         JNIEnv* env,
         jobject /* this */,
         jstring rootPath) {
@@ -249,7 +249,7 @@ Java_uz_csec_antivirus_NativeLib_getHiddenFiles(
 }
 
 extern "C" JNIEXPORT jstring JNICALL
-Java_uz_csec_antivirus_NativeLib_scanFileWithAntivirus(
+Java_uz_csec_zirhanalizator_NativeLib_scanFileWithAntivirus(
         JNIEnv* env,
         jobject /* this */,
         jstring filePath) {
@@ -311,7 +311,7 @@ Java_uz_csec_antivirus_NativeLib_scanFileWithAntivirus(
 }
 
 extern "C" JNIEXPORT jstring JNICALL
-Java_uz_csec_antivirus_NativeLib_getFileStatistics(
+Java_uz_csec_zirhanalizator_NativeLib_getFileStatistics(
         JNIEnv* env,
         jobject /* this */,
         jstring rootPath) {

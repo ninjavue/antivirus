@@ -8,14 +8,16 @@
     android:layout_height="match_parent"
     tools:context=".SecurityActivity">
 
+    <!-- ScrollView for app content -->
     <ScrollView
         android:id="@+id/security_scroll"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:paddingLeft="0dp"
         android:paddingRight="0dp"
-        android:paddingBottom="0dp">
-        
+        android:paddingBottom="0dp"
+        android:visibility="gone">
+
         <LinearLayout
             android:id="@+id/security_info_container"
             android:layout_width="match_parent"
@@ -57,7 +59,7 @@
                         android:text="@string/security"
                         android:textSize="18sp"
                         android:textStyle="bold"
-                        android:layout_marginLeft="-6dp"
+                        android:layout_marginStart="-6dp"
                         android:textColor="@color/antivirus_text"/>
                 </LinearLayout>
 
@@ -95,6 +97,7 @@
                 </LinearLayout>
 
             </LinearLayout>
+
             <!-- Content Container -->
             <FrameLayout
                 android:id="@+id/content_container"
@@ -110,7 +113,7 @@
                     android:background="@android:color/transparent"
                     android:padding="16dp"
                     android:visibility="visible">
-                    
+
                     <androidx.recyclerview.widget.RecyclerView
                         android:id="@+id/rv_dangerous_apps"
                         android:layout_width="match_parent"
@@ -126,7 +129,7 @@
                     android:background="@android:color/transparent"
                     android:padding="16dp"
                     android:visibility="gone">
-                    
+
                     <androidx.recyclerview.widget.RecyclerView
                         android:id="@+id/rv_safe_apps"
                         android:layout_width="match_parent"
@@ -137,5 +140,33 @@
 
         </LinearLayout>
     </ScrollView>
+
+    <!-- Loading Container -->
+    <LinearLayout
+        android:id="@+id/loading_container"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:gravity="center"
+        android:orientation="vertical"
+        android:background="@color/white"
+        android:visibility="visible">
+
+        <ProgressBar
+            android:id="@+id/progressBar"
+            style="?android:attr/progressBarStyleLarge"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="16dp" />
+
+        <TextView
+            android:id="@+id/textView"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/loading"
+            android:textSize="16sp"
+            android:textColor="@color/antivirus_text"
+            android:visibility="visible" />
+
+    </LinearLayout>
 
 </RelativeLayout>

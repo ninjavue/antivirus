@@ -13,35 +13,35 @@ jobject getContextFromActivity(JNIEnv* env, jobject activity) {
 }
 
 extern "C" JNIEXPORT jstring JNICALL
-Java_uz_csec_antivirus_SecurityActivity_getDangerousApps(JNIEnv *env, jobject thiz) {
+Java_uz_csec_zirhanalizator_SecurityActivity_getDangerousApps(JNIEnv *env, jobject thiz) {
     jobject context = getContextFromActivity(env, thiz);
-    jclass cls = env->FindClass("uz/csec/antivirus/SecurityActivity");
+    jclass cls = env->FindClass("uz/csec/zirhanalizator/SecurityActivity");
     jmethodID mid = env->GetStaticMethodID(cls, "getDangerousAppsList", "(Landroid/content/Context;)Ljava/lang/String;");
     jstring result = (jstring)env->CallStaticObjectMethod(cls, mid, context);
     return result;
 }
 
 extern "C" JNIEXPORT jstring JNICALL
-Java_uz_csec_antivirus_SecurityActivity_getPermissionsControl(JNIEnv *env, jobject thiz) {
+Java_uz_csec_zirhanalizator_SecurityActivity_getPermissionsControl(JNIEnv *env, jobject thiz) {
     jobject context = getContextFromActivity(env, thiz);
-    jclass cls = env->FindClass("uz/csec/antivirus/SecurityActivity");
+    jclass cls = env->FindClass("uz/csec/zirhanalizator/SecurityActivity");
     jmethodID mid = env->GetStaticMethodID(cls, "getAppsWithSensitivePermissions", "(Landroid/content/Context;)Ljava/lang/String;");
     jstring result = (jstring)env->CallStaticObjectMethod(cls, mid, context);
     return result;
 }
 
 extern "C" JNIEXPORT jstring JNICALL
-Java_uz_csec_antivirus_SecurityActivity_getRootStatus(JNIEnv *env, jobject /* this */) {
-    jclass cls = env->FindClass("uz/csec/antivirus/SecurityActivity");
+Java_uz_csec_zirhanalizator_SecurityActivity_getRootStatus(JNIEnv *env, jobject /* this */) {
+    jclass cls = env->FindClass("uz/csec/zirhanalizator/SecurityActivity");
     jmethodID mid = env->GetStaticMethodID(cls, "getRootStatusJava", "()Ljava/lang/String;");
     jstring result = (jstring)env->CallStaticObjectMethod(cls, mid);
     return result;
 }
 
 extern "C" JNIEXPORT jstring JNICALL
-Java_uz_csec_antivirus_SecurityActivity_getWifiSecurity(JNIEnv *env, jobject thiz) {
+Java_uz_csec_zirhanalizator_SecurityActivity_getWifiSecurity(JNIEnv *env, jobject thiz) {
     jobject context = getContextFromActivity(env, thiz);
-    jclass cls = env->FindClass("uz/csec/antivirus/SecurityActivity");
+    jclass cls = env->FindClass("uz/csec/zirhanalizator/SecurityActivity");
     jmethodID mid = env->GetStaticMethodID(cls, "getWifiSecurityJava", "(Landroid/content/Context;)Ljava/lang/String;");
     jstring result = (jstring)env->CallStaticObjectMethod(cls, mid, context);
     return result;
